@@ -1,19 +1,15 @@
-//
-//  NotificationService.swift
-//  richpush
-//
-//  Created by Abheek Basu on 1/19/24.
-//
+// The Swift Programming Language
+// https://docs.swift.org/swift-book
 
 import UserNotifications
 import UIKit
 
-class LaudspeakerNotificationService: UNNotificationServiceExtension {
+open class LaudspeakerNotificationService: UNNotificationServiceExtension {
     
     var contentHandler: ((UNNotificationContent) -> Void)?
     var bestAttemptContent: UNMutableNotificationContent?
     
-    override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
+    public override func didReceive(_ request: UNNotificationRequest, withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
         self.contentHandler = contentHandler
         bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
         
@@ -42,7 +38,7 @@ class LaudspeakerNotificationService: UNNotificationServiceExtension {
         }
     }
     
-    override func serviceExtensionTimeWillExpire() {
+    public override func serviceExtensionTimeWillExpire() {
         // Called just before the extension will be terminated by the system.
         // Use this as an opportunity to deliver your "best attempt" at modified content, otherwise the original push payload will be used.
         
@@ -82,4 +78,3 @@ class LaudspeakerNotificationService: UNNotificationServiceExtension {
     }
     
 }
-
