@@ -186,7 +186,7 @@ public class LaudspeakerCore {
     public func fire(event: String, payload: [String: Any]? = nil) {
         // Initialize payload string
         let customerId = self.getCustomerId()
-        var payloadString = "null"
+        var payloadString = "{}"
         
         // If payload is provided, convert it to JSON string
         if let payload = payload, let payloadData = try? JSONSerialization.data(withJSONObject: payload, options: []) {
