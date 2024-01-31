@@ -190,7 +190,7 @@ public class LaudspeakerCore {
         
         // If payload is provided, convert it to JSON string
         if let payload = payload, let payloadData = try? JSONSerialization.data(withJSONObject: payload, options: []) {
-            payloadString = String(data: payloadData, encoding: .utf8) ?? "null"
+            payloadString = String(data: payloadData, encoding: .utf8) ?? "{}"
         }
         
         // Create JSON body with dynamic event name, correlationKey, correlationValue, and payload
