@@ -47,6 +47,7 @@ public class LaudspeakerCore {
     private var apiKey: String?
     private var isPushAutomated: Bool = false
     public var isConnected: Bool = false
+    private var endpointUrl: String?
     
     public func getCustomerId() -> String {
         return self.storage.getItem(forKey: "customerId") ?? ""
@@ -61,7 +62,7 @@ public class LaudspeakerCore {
         guard let url = URL(string: urlString) else {
             fatalError("Invalid URL")
         }
-        
+        self.endpointUrl = urlString
         // Use SocketManager to manage the connection
         manager = SocketManager(socketURL: url, config: [
             .log(true),
@@ -182,7 +183,48 @@ public class LaudspeakerCore {
         }
     }
     
-    
+    public func fire(event: String, payload: [String: Any]? = nil) {
+        // Initialize payload string
+        let customerId = self.getCustomerId()
+        var payloadString = "null"
+        
+        // If payload is provided, convert it to JSON string
+        if let payload = payload, let payloadData = try? JSONSerialization.data(withJSONObject: payload, options: []) {
+            payloadString = String(data: payloadData, encoding: .utf8) ?? "null"
+        }
+        
+        // Create JSON body with dynamic event name, correlationKey, correlationValue, and payload
+        let parameters = """
+        {
+            "correlationKey": "_id",
+            "correlationValue": "\(customerId)",
+            "source": "custom",
+            "event": "\(event)",
+            "payload": \(payloadString)
+        }
+        """
+        
+        let postData = parameters.data(using: .utf8)
+        
+        var request = URLRequest(url: URL(string: (self.endpointUrl ?? "") + "/events")!,timeoutInterval: Double.infinity)
+        //var request = URLRequest(url: URL(string: "https://api.laudspeaker.com/events/")!,timeoutInterval: Double.infinity)
+        request.addValue("Api-Key " + (self.apiKey ?? ""), forHTTPHeaderField: "Authorization")
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        request.httpMethod = "POST"
+        request.httpBody = postData
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, error in
+          guard let data = data else {
+            print(String(describing: error))
+            return
+          }
+          print(String(data: data, encoding: .utf8)!)
+        }
+
+        task.resume()
+
+    }
     
     public func connect() {
         print("Try to connect")
