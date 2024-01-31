@@ -206,7 +206,7 @@ public class LaudspeakerCore {
         
         let postData = parameters.data(using: .utf8)
         
-        var request = URLRequest(url: URL(string: (self.endpointUrl ?? "") + "/events")!,timeoutInterval: Double.infinity)
+        var request = URLRequest(url: URL(string: (self.endpointUrl ?? "") + "events")!,timeoutInterval: Double.infinity)
         //var request = URLRequest(url: URL(string: "https://api.laudspeaker.com/events/")!,timeoutInterval: Double.infinity)
         request.addValue("Api-Key " + (self.apiKey ?? ""), forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
