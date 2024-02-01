@@ -53,7 +53,7 @@ public class LaudspeakerCore {
         return self.storage.getItem(forKey: "customerId") ?? ""
     }
     
-    private func trimmedURL(from urlString: String) -> String? {
+    private static func trimmedURL(from urlString: String) -> String? {
         guard let url = URL(string: urlString),
               var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             return nil
@@ -73,7 +73,7 @@ public class LaudspeakerCore {
         
         var urlString = url ?? defaultURLString
         self.endpointUrl = urlString
-        urlString = trimmedURL(from: urlString) ?? urlString
+        urlString = LaudspeakerCore.trimmedURL(from: urlString) ?? urlString
         guard let urlObject = URL(string: urlString) else {
             fatalError("Invalid URL")
         }
