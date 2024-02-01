@@ -53,18 +53,32 @@ public class LaudspeakerCore {
         return self.storage.getItem(forKey: "customerId") ?? ""
     }
     
+    private func trimmedURL(from urlString: String) -> String? {
+        guard let url = URL(string: urlString),
+              var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            return nil
+        }
+        // Remove path, query, and fragment components to only leave the scheme, host, and port (if any)
+        components.path = "/"
+        components.query = nil
+        components.fragment = nil
+
+        return components.string
+    }
+    
     public init(storage: LaudspeakerStorage? = nil, url: String? = nil, apiKey: String? = nil, isPushAutomated: Bool? = nil) {
         self.storage = storage ?? UserDefaultsStorage()
         self.apiKey = apiKey
         self.isPushAutomated = isPushAutomated ?? false
         
-        let urlString = url ?? defaultURLString
-        guard let url = URL(string: urlString) else {
+        var urlString = url ?? defaultURLString
+        self.endpointUrl = urlString
+        urlString = trimmedURL(from: urlString) ?? urlString
+        guard let urlObject = URL(string: urlString) else {
             fatalError("Invalid URL")
         }
-        self.endpointUrl = urlString
         // Use SocketManager to manage the connection
-        manager = SocketManager(socketURL: url, config: [
+        manager = SocketManager(socketURL: urlObject, config: [
             .log(true),
             .compress,
         ])
