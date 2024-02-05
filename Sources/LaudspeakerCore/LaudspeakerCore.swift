@@ -259,6 +259,7 @@ public class LaudspeakerCore {
     }
     
     public func disconnect() {
+        print("disconnected")
         socket?.disconnect()
     }
     
