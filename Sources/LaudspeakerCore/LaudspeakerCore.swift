@@ -122,6 +122,8 @@ public class LaudspeakerCore {
             print("LaudspeakerCore LOG")
             print(data)
         }
+        
+        print("added all handlers")
     }
     
     public func identify(uniqueProperties: PropertyDict, optionalProperties: PropertyDict? = nil) {
@@ -246,6 +248,8 @@ public class LaudspeakerCore {
 
     }
     
+    var onConnect: (() -> Void)?
+    
     public func connect() {
         print("Try to connect")
         
@@ -256,6 +260,12 @@ public class LaudspeakerCore {
         ]
         
         socket?.connect(withPayload: authParams)
+        
+        self.socket?.on(clientEvent: .connect) { [weak self] data, ack in
+                print("LaudspeakerCore connected")
+                self?.isConnected = true
+                self?.onConnect?()  // Call the completion handler if set
+        }
     }
     
     public func disconnect() {
