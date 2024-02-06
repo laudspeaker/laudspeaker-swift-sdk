@@ -248,7 +248,7 @@ public class LaudspeakerCore {
 
     }
     
-    var onConnect: (() -> Void)?
+    public var onConnect: (() -> Void)?
     
     public func connect() {
         print("Try to connect")
