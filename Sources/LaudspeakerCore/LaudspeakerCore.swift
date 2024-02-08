@@ -126,14 +126,14 @@ public class LaudspeakerCore {
         print("added all handlers")
     }
     
-    public func identify(uniqueProperties: PropertyDict, optionalProperties: PropertyDict? = nil) {
+    public func identify(distinctId: String, optionalProperties: PropertyDict? = nil) {
         // Ensure the socket is connected before attempting to write
         guard isConnected else {
             print("Impossible to identify: no connection to API. Try to init connection first")
             return
         }
         
-        var messageDict: PropertyDict = ["uniqueProperties": uniqueProperties]
+        var messageDict: PropertyDict = ["__PrimaryKey": distinctId]
         if let optionalProps = optionalProperties {
             messageDict["optionalProperties"] = optionalProps
         }
