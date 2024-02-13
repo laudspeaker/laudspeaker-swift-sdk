@@ -226,7 +226,7 @@ public class LaudspeakerCore {
         {
             "correlationKey": "_id",
             "correlationValue": "\(customerId)",
-            "source": "custom",
+            "source": "mobile",
             "event": "\(event)",
             "payload": \(payloadString)
         }
