@@ -164,21 +164,25 @@ public class LaudspeakerCore {
     
     public func set(properties: PropertyDict) {
         // Ensure the socket is connected before attempting to write
+        /*
         guard isConnected else {
             print("Impossible to identify: no connection to API. Try to init connection first")
             return
         }
-        
+        */
+         
         var messageDict: PropertyDict = [:]
         messageDict["optionalProperties"] = properties
         socket?.emit("set", messageDict)
     }
     
     public func sendFCMToken(fcmToken: String? = nil) {
+        /*
         guard isConnected else {
             print("Impossible to send token: no connection to API. Try to init connection first")
             return
         }
+        */
         
         let tokenToSend: String
         
