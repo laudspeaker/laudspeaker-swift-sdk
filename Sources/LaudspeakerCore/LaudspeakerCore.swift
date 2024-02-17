@@ -49,6 +49,13 @@ public class LaudspeakerCore {
     public var isConnected: Bool = false
     private var endpointUrl: String?
     
+    private var reconnectAttempt: Int = 0
+    private var messageQueue: [[String: Any]] = [] {
+        didSet {
+            saveMessageQueueToDisk()
+        }
+    }
+    
     public func getCustomerId() -> String {
         return self.storage.getItem(forKey: "customerId") ?? ""
     }
@@ -78,15 +85,27 @@ public class LaudspeakerCore {
             fatalError("Invalid URL")
         }
         // Use SocketManager to manage the connection
-        manager = SocketManager(socketURL: urlObject, config: [
+        self.manager = SocketManager(socketURL: urlObject, config: [
             .log(true),
             .compress,
+            .reconnects(true)
         ])
         
         // Initialize the socket using the manager
         socket = manager.defaultSocket
         
         addHandlers()
+    }
+    
+    private func saveMessageQueueToDisk() {
+         guard let data = try? JSONSerialization.data(withJSONObject: messageQueue, options: []) else { return }
+         let fileURL = getDocumentsDirectory().appendingPathComponent("socketMessageQueue.json")
+         try? data.write(to: fileURL)
+     }
+    
+    private func getDocumentsDirectory() -> URL {
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        return paths[0]
     }
     
     private func addHandlers() {
