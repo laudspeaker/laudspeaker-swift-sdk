@@ -278,9 +278,9 @@ public class LaudspeakerCore {
             print(String(describing: error))
             return
           }
-          print("response is")
-          print(response)
-          print("response done")
+          //print("response is")
+          //print(response)
+          //print("response done")
           print(String(data: data, encoding: .utf8)!)
         }
 
