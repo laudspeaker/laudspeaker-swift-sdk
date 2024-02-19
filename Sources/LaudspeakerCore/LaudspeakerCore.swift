@@ -288,6 +288,28 @@ public class LaudspeakerCore {
 
     }
     
+    public func fireS(event: String, payload: [String: Any]? = nil) {
+        // Initialize payload string
+        let customerId = self.getCustomerId()
+        var payloadString = "{}"
+        
+        // If payload is provided, convert it to JSON string
+        if let payload = payload, let payloadData = try? JSONSerialization.data(withJSONObject: payload, options: []) {
+            payloadString = String(data: payloadData, encoding: .utf8) ?? "{}"
+        }
+        
+        var fullPayload: [String: Any] = [:]
+        
+        fullPayload["eventName"] = event;
+        fullPayload["payload"] = payloadString;
+        fullPayload["customerId"] = customerId;
+        
+        socket?.emit("fire", fullPayload)
+        
+        // Create JSON body with dynamic event name, correlationKey, correlationValue, and payload
+        
+    }
+    
     public var onConnect: (() -> Void)?
     
     public func connect() {
