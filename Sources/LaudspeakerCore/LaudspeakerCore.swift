@@ -96,7 +96,7 @@ public class LaudspeakerCore {
         self.manager = SocketManager(socketURL: urlObject, config: [
             .log(true),
             .compress,
-            .reconnects(true)
+            .reconnects(false)
         ])
         
         // Initialize the socket using the manager
@@ -125,6 +125,10 @@ public class LaudspeakerCore {
         socket?.on(clientEvent: .disconnect) { [weak self] data, ack in
             print("LaudspeakerCore disconnected")
             self?.isConnected = false
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
+                    self?.reconnectWithUpdatedParams()
+                }
         }
         
         socket?.on(clientEvent: .error) { [weak self] data, ack in
@@ -145,6 +149,8 @@ public class LaudspeakerCore {
                     "customerId": customerId,
                     "development": false
                 ]
+                
+                //self?.socket?.manager.
                 
                 if ((self?.isPushAutomated) == true) {
                     self?.sendFCMToken()
@@ -355,6 +361,15 @@ public class LaudspeakerCore {
     public func disconnect() {
         print("disconnected")
         socket?.disconnect()
+    }
+    
+    func reconnectWithUpdatedParams() {
+        // Update authParams with the latest customerId
+        authParams["customerId"] = self.storage.getItem(forKey: "customerId") ?? ""
+        
+        // Now attempt to reconnect with updated parameters
+        socket?.disconnect() // Ensure socket is disconnected
+        socket?.connect(withPayload: authParams)
     }
     
 }
