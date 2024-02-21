@@ -49,12 +49,20 @@ public class LaudspeakerCore {
     public var isConnected: Bool = false
     private var endpointUrl: String?
     
+    var authParams: [String: Any] = [
+        "apiKey": "",
+        "customerId":  "",
+        "development": false
+    ]
+    
     private var reconnectAttempt: Int = 0
     private var messageQueue: [[String: Any]] = [] {
         didSet {
             saveMessageQueueToDisk()
         }
     }
+    
+    
     
     public func getCustomerId() -> String {
         return self.storage.getItem(forKey: "customerId") ?? ""
@@ -131,6 +139,13 @@ public class LaudspeakerCore {
                 print(customerId)
                 
                 self?.storage.setItem(customerId, forKey: "customerId")
+                
+                self?.authParams = [
+                    "apiKey": self?.apiKey ?? "",
+                    "customerId": customerId,
+                    "development": false
+                ]
+                
                 if ((self?.isPushAutomated) == true) {
                     self?.sendFCMToken()
                 }
@@ -315,11 +330,18 @@ public class LaudspeakerCore {
     public func connect() {
         print("Try to connect")
         
+        authParams = [
+            "apiKey": self.apiKey ?? "",
+            "customerId": self.storage.getItem(forKey: "customerId") ?? "",
+            "development": false
+        ]
+        /*
         let authParams: [String: Any] = [
             "apiKey": self.apiKey ?? "",
             "customerId": self.storage.getItem(forKey: "customerId") ?? "",
             "development": false
         ]
+        */
         
         socket?.connect(withPayload: authParams)
         
