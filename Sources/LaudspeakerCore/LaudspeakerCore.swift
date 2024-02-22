@@ -103,6 +103,7 @@ public class LaudspeakerCore {
         socket = manager.defaultSocket
         
         addHandlers()
+        loadMessageQueueFromDisk() // Load the message queue from disk
     }
     
     private func saveMessageQueueToDisk() {
@@ -143,6 +144,10 @@ public class LaudspeakerCore {
                 print(customerId)
                 
                 self?.storage.setItem(customerId, forKey: "customerId")
+                
+                // Tried to see if there was a way to update the auth string via query
+                // Doesn't look like there is
+                //self?.socket?.manager?.socketURL.query(false).
                 
                 self?.authParams = [
                     "apiKey": self?.apiKey ?? "",
@@ -354,6 +359,7 @@ public class LaudspeakerCore {
         self.socket?.on(clientEvent: .connect) { [weak self] data, ack in
                 print("LaudspeakerCore connected")
                 self?.isConnected = true
+                self?.resendQueuedMessages()
                 self?.onConnect?()  // Call the completion handler if set
         }
     }
@@ -370,6 +376,36 @@ public class LaudspeakerCore {
         // Now attempt to reconnect with updated parameters
         socket?.disconnect() // Ensure socket is disconnected
         socket?.connect(withPayload: authParams)
+    }
+    
+    public func queueMessage(event: String, payload: [String: Any]) {
+        let messageDict: [String: Any] = ["event": event, "payload": payload]
+        messageQueue.append(messageDict)
+        saveMessageQueueToDisk()
+    }
+    
+    private func resendQueuedMessages() {
+        for message in messageQueue {
+            guard let event = message["event"] as? String,
+                  let payload = message["payload"] as? [String: Any] else {
+                continue
+            }
+            
+            // Emit each message
+            socket?.emit(event, payload)
+        }
+        
+        // Clear the queue after sending all messages
+        messageQueue.removeAll()
+        saveMessageQueueToDisk()
+    }
+    
+    private func loadMessageQueueFromDisk() {
+        let fileURL = getDocumentsDirectory().appendingPathComponent("socketMessageQueue.json")
+        if let data = try? Data(contentsOf: fileURL),
+           let queue = try? JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
+            messageQueue = queue
+        }
     }
     
 }
