@@ -55,6 +55,13 @@ public class LaudspeakerCore {
         "development": false
     ]
     
+    private let initialReconnectDelay: Double = 1 // Initial delay in seconds
+    private let maxReconnectDelay: Double = 60 // Maximum delay in seconds
+    private let reconnectMultiplier: Double = 2 // Multiplier for each attempt
+    private let maxReconnectAttempts: Int = 5 // Maximum number of reconnection attempts
+
+
+    
     private var reconnectAttempt: Int = 0
     private var messageQueue: [[String: Any]] = [] {
         didSet {
@@ -185,7 +192,8 @@ public class LaudspeakerCore {
             messageDict["optionalProperties"] = optionalProps
         }
         
-        socket?.emit("identify", messageDict)
+        //socket?.emit("identify", messageDict)
+        emitMessage(channel: "identify", payload: messageDict)
     }
     
     public func set(properties: PropertyDict) {
@@ -200,6 +208,8 @@ public class LaudspeakerCore {
         var messageDict: PropertyDict = [:]
         messageDict["optionalProperties"] = properties
         socket?.emit("set", messageDict)
+        emitMessage(channel: "set", payload: messageDict)
+        
     }
     
     public func sendFCMToken(fcmToken: String? = nil) {
@@ -254,7 +264,8 @@ public class LaudspeakerCore {
                             "token": token
                         ]
                         
-                        self?.socket?.emit("fcm_token", payload)
+                        //self?.socket?.emit("fcm_token", payload)
+                        self?.emitMessage(channel: "fcm_token", payload: payload)
                     }
                 }
             }
@@ -330,7 +341,10 @@ public class LaudspeakerCore {
         fullPayload["payload"] = payloadString;
         fullPayload["customerId"] = customerId;
         
-        socket?.emit("fire", fullPayload)
+        emitMessage(channel: "fire", payload: fullPayload)
+
+        
+        //socket?.emit("fire", fullPayload)
         
         // Create JSON body with dynamic event name, correlationKey, correlationValue, and payload
         
@@ -359,6 +373,7 @@ public class LaudspeakerCore {
         self.socket?.on(clientEvent: .connect) { [weak self] data, ack in
                 print("LaudspeakerCore connected")
                 self?.isConnected = true
+                self?.reconnectAttempt = 0 // Reset the reconnect attempt counter
                 self?.resendQueuedMessages()
                 self?.onConnect?()  // Call the completion handler if set
         }
@@ -370,6 +385,31 @@ public class LaudspeakerCore {
     }
     
     func reconnectWithUpdatedParams() {
+        if reconnectAttempt >= maxReconnectAttempts {
+                print("Maximum reconnection attempts reached. Aborting.")
+                return
+            }
+        // Calculate the delay for the current attempt
+        let delay = min(maxReconnectDelay, initialReconnectDelay * pow(reconnectMultiplier, Double(reconnectAttempt)))
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self = self else { return }
+            
+            // Ensure the socket is disconnected before attempting to reconnect
+            //if self.socket?.status != .connected {
+                print("Attempting to reconnect with delay: \(delay) seconds")
+                self.socket?.disconnect()
+                self.authParams["customerId"] = self.storage.getItem(forKey: "customerId") ?? ""
+                self.socket?.connect(withPayload: self.authParams)
+                
+                // Increase the attempt counter
+                self.reconnectAttempt += 1
+            //}
+        }
+    }
+
+    /*
+    func reconnectWithUpdatedParams() {
         // Update authParams with the latest customerId
         authParams["customerId"] = self.storage.getItem(forKey: "customerId") ?? ""
         
@@ -377,6 +417,7 @@ public class LaudspeakerCore {
         socket?.disconnect() // Ensure socket is disconnected
         socket?.connect(withPayload: authParams)
     }
+    */
     
     public func queueMessage(event: String, payload: [String: Any]) {
         let messageDict: [String: Any] = ["event": event, "payload": payload]
@@ -406,6 +447,17 @@ public class LaudspeakerCore {
            let queue = try? JSONSerialization.jsonObject(with: data, options: []) as? [[String: Any]] {
             messageQueue = queue
         }
+    }
+    
+    public func emitMessage(channel: String, payload: [String: Any]) {
+        guard isConnected else {
+            print("Socket is disconnected. Queuing message for \(channel)")
+            queueMessage(event: channel, payload: payload)
+            return
+        }
+        
+        // If connected, emit the message
+        socket?.emit(channel, payload)
     }
     
 }
