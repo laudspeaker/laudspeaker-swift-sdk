@@ -391,12 +391,14 @@ public class LaudspeakerCore {
     
     func reconnectWithUpdatedParams() {
         print("about to try and reconnect")
+        /*
         if reconnectAttempt >= maxReconnectAttempts {
                 print("Maximum reconnection attempts reached. Aborting.")
                 print(self.isConnected)
                 print("^")
                 return
             }
+         */
         // Calculate the delay for the current attempt
         let delay = min(maxReconnectDelay, initialReconnectDelay * pow(reconnectMultiplier, Double(reconnectAttempt)))
         
