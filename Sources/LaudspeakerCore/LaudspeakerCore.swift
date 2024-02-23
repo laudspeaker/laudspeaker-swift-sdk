@@ -144,7 +144,7 @@ public class LaudspeakerCore {
             print("LaudspeakerCore ERROR",data)
             self?.isConnected = false
             
-            self?.reconnectWithUpdatedParams()
+            //self?.reconnectWithUpdatedParams()
 
         }
         
