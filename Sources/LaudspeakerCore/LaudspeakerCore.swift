@@ -129,7 +129,10 @@ public class LaudspeakerCore {
         socket?.on(clientEvent: .connect) { [weak self] data, ack in
             print("LaudspeakerCore connected")
             self?.isConnected = true
+            self?.resendQueuedMessages()
             self?.reconnectAttempt = 0
+            print("sent resendQueue")
+            self?.onConnect?()
         }
         
         socket?.on(clientEvent: .disconnect) { [weak self] data, ack in
@@ -375,6 +378,7 @@ public class LaudspeakerCore {
         
         socket?.connect(withPayload: authParams)
         
+        /*
         self.socket?.on(clientEvent: .connect) { [weak self] data, ack in
                 print("LaudspeakerCore connected")
                 self?.isConnected = true
@@ -383,6 +387,7 @@ public class LaudspeakerCore {
                 print("sent resendQueue")
                 self?.onConnect?()  // Call the completion handler if set
         }
+        */
     }
     
     public func disconnect() {
