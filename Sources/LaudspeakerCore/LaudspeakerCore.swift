@@ -380,6 +380,7 @@ public class LaudspeakerCore {
                 self?.isConnected = true
                 //self?.reconnectAttempt = 0 // Reset the reconnect attempt counter
                 self?.resendQueuedMessages()
+                print("sent resendQueue")
                 self?.onConnect?()  // Call the completion handler if set
         }
     }
@@ -402,23 +403,21 @@ public class LaudspeakerCore {
         // Calculate the delay for the current attempt
         let delay = min(maxReconnectDelay, initialReconnectDelay * pow(reconnectMultiplier, Double(reconnectAttempt)))
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { 
+        print("Attempting to reconnect with delay: \(delay) seconds")
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             [weak self] in
             guard let self = self else 
             {
                 print("why")
                 return
             }
-            
             // Ensure the socket is disconnected before attempting to reconnect
             //if self.socket?.status != .connected {
-                print("Attempting to reconnect with delay: \(delay) seconds")
-                self.socket?.disconnect()
-                self.authParams["customerId"] = self.storage.getItem(forKey: "customerId") ?? ""
-                self.socket?.connect(withPayload: self.authParams)
-                
-                // Increase the attempt counter
-                self.reconnectAttempt += 1
+            self.socket?.disconnect()
+            self.authParams["customerId"] = self.storage.getItem(forKey: "customerId") ?? ""
+            self.socket?.connect(withPayload: self.authParams)
+            // Increase the attempt counter
+            self.reconnectAttempt += 1
             //}
         }
     }
@@ -441,13 +440,19 @@ public class LaudspeakerCore {
     }
     
     private func resendQueuedMessages() {
+        print("in resendQueudMessages")
         
         for message in messageQueue {
             guard let event = message["event"] as? String,
                   let payload = message["payload"] as? [String: Any] else {
+                print("continue for some reason")
                 continue
             }
             // Emit each message
+            print("about to resend here is message");
+            print(event)
+            print(payload)
+            print("about to resend");
             emitMessage(channel: event, payload: payload)
         }
         // Clear the queue after sending all messages
