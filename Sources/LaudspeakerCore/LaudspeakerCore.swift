@@ -378,7 +378,7 @@ public class LaudspeakerCore {
         self.socket?.on(clientEvent: .connect) { [weak self] data, ack in
                 print("LaudspeakerCore connected")
                 self?.isConnected = true
-                self?.reconnectAttempt = 0 // Reset the reconnect attempt counter
+                //self?.reconnectAttempt = 0 // Reset the reconnect attempt counter
                 self?.resendQueuedMessages()
                 self?.onConnect?()  // Call the completion handler if set
         }
@@ -447,14 +447,13 @@ public class LaudspeakerCore {
                   let payload = message["payload"] as? [String: Any] else {
                 continue
             }
-            
             // Emit each message
             emitMessage(channel: event, payload: payload)
         }
-        
         // Clear the queue after sending all messages
         messageQueue.removeAll()
         saveMessageQueueToDisk()
+        reconnectAttempt = 0;
     }
     
     private func loadMessageQueueFromDisk() {
@@ -465,9 +464,11 @@ public class LaudspeakerCore {
         }
     }
     
+    
     public func emitMessage(channel: String, payload: [String: Any]) {
         if isConnected {
-                socket?.emit(channel, payload)
+            socket?.emit(channel, payload)
+            
             } else {
                 print("Socket is disconnected. Queuing message for \(channel)")
                 queueMessage(event: channel, payload: payload)
