@@ -400,8 +400,13 @@ public class LaudspeakerCore {
         // Calculate the delay for the current attempt
         let delay = min(maxReconnectDelay, initialReconnectDelay * pow(reconnectMultiplier, Double(reconnectAttempt)))
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-            guard let self = self else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { 
+            [weak self] in
+            guard let self = self else 
+            {
+                print("why")
+                return
+            }
             
             // Ensure the socket is disconnected before attempting to reconnect
             //if self.socket?.status != .connected {
