@@ -56,7 +56,7 @@ public class LaudspeakerCore {
     ]
     
     private let initialReconnectDelay: Double = 1 // Initial delay in seconds
-    private let maxReconnectDelay: Double = 60 // Maximum delay in seconds
+    private let maxReconnectDelay: Double = 90 // Maximum delay in seconds
     private let reconnectMultiplier: Double = 2 // Multiplier for each attempt
     private let maxReconnectAttempts: Int = 5 // Maximum number of reconnection attempts
 
@@ -65,11 +65,12 @@ public class LaudspeakerCore {
     private var reconnectAttempt: Int = 0
     private var messageQueue: [[String: Any]] = [] {
         didSet {
+            if messageQueue.count > 20 {
+                        messageQueue.removeFirst(messageQueue.count - 20)
+            }
             saveMessageQueueToDisk()
         }
     }
-    
-    
     
     public func getCustomerId() -> String {
         return self.storage.getItem(forKey: "customerId") ?? ""
@@ -128,20 +129,23 @@ public class LaudspeakerCore {
         socket?.on(clientEvent: .connect) { [weak self] data, ack in
             print("LaudspeakerCore connected")
             self?.isConnected = true
+            self?.reconnectAttempt = 0
         }
         
         socket?.on(clientEvent: .disconnect) { [weak self] data, ack in
             print("LaudspeakerCore disconnected")
             self?.isConnected = false
             
-            DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(5)) {
-                    self?.reconnectWithUpdatedParams()
-                }
+            self?.reconnectWithUpdatedParams()
+
         }
         
         socket?.on(clientEvent: .error) { [weak self] data, ack in
             print("LaudspeakerCore ERROR",data)
             self?.isConnected = false
+            
+            self?.reconnectWithUpdatedParams()
+
         }
         
         socket?.on("customerId") { [weak self] data, ack in
@@ -231,8 +235,9 @@ public class LaudspeakerCore {
                 "type": "iOS",
                 "token": tokenToSend
             ]
+            //self.socket?.emit("fcm_token", payload)
+            self.emitMessage(channel: "fcm_token", payload: payload)
             
-            self.socket?.emit("fcm_token", payload)
         } else {
             DispatchQueue.main.async {
                 let center = UNUserNotificationCenter.current()
@@ -385,8 +390,11 @@ public class LaudspeakerCore {
     }
     
     func reconnectWithUpdatedParams() {
+        print("about to try and reconnect")
         if reconnectAttempt >= maxReconnectAttempts {
                 print("Maximum reconnection attempts reached. Aborting.")
+                print(self.isConnected)
+                print("^")
                 return
             }
         // Calculate the delay for the current attempt
@@ -426,6 +434,7 @@ public class LaudspeakerCore {
     }
     
     private func resendQueuedMessages() {
+        
         for message in messageQueue {
             guard let event = message["event"] as? String,
                   let payload = message["payload"] as? [String: Any] else {
@@ -433,7 +442,7 @@ public class LaudspeakerCore {
             }
             
             // Emit each message
-            socket?.emit(event, payload)
+            emitMessage(channel: event, payload: payload)
         }
         
         // Clear the queue after sending all messages
@@ -450,14 +459,13 @@ public class LaudspeakerCore {
     }
     
     public func emitMessage(channel: String, payload: [String: Any]) {
-        guard isConnected else {
-            print("Socket is disconnected. Queuing message for \(channel)")
-            queueMessage(event: channel, payload: payload)
-            return
-        }
-        
-        // If connected, emit the message
-        socket?.emit(channel, payload)
+        if isConnected {
+                socket?.emit(channel, payload)
+            } else {
+                print("Socket is disconnected. Queuing message for \(channel)")
+                queueMessage(event: channel, payload: payload)
+                return
+            }
     }
     
 }
