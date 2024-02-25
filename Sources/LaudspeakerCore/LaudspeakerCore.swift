@@ -281,7 +281,7 @@ public class LaudspeakerCore {
         }
     }
     
-    public func fire(event: String, payload: [String: Any]? = nil) {
+    public func fireS(event: String, payload: [String: Any]? = nil) {
         // Initialize payload string
         let customerId = self.getCustomerId()
         var payloadString = "{}"
@@ -333,7 +333,7 @@ public class LaudspeakerCore {
 
     }
     
-    public func fireS(event: String, payload: [String: Any]? = nil) {
+    public func fire(event: String, payload: [String: Any]? = nil) {
         // Initialize payload string
         let customerId = self.getCustomerId()
         var payloadString = "{}"
