@@ -129,17 +129,10 @@ public class LaudspeakerCore {
         socket?.on(clientEvent: .connect) { [weak self] data, ack in
             print("LaudspeakerCore connected")
             self?.isConnected = true
-            //self?.resendQueuedMessages()
-            //self?.reconnectAttempt = 0
-            //print("sent resendQueue")
-            self?.onConnect?()
-        }
-        
-        socket?.on("flush") { [weak self] data, ack in
-            print("flushing")
             self?.resendQueuedMessages()
             self?.reconnectAttempt = 0
             print("sent resendQueue")
+            self?.onConnect?()
         }
         
         socket?.on(clientEvent: .disconnect) { [weak self] data, ack in
