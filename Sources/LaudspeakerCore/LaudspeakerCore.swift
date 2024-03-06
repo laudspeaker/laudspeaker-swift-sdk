@@ -152,7 +152,8 @@ public class LaudspeakerCore {
         
         socket?.on(clientEvent: .error) { [weak self] data, ack in
             print("LaudspeakerCore ERROR",data)
-            self?.isConnected = false
+            //print
+            //self?.isConnected = false
             
             //self?.reconnectWithUpdatedParams()
 
