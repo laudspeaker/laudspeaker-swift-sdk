@@ -92,7 +92,7 @@ class LaudspeakerApi {
     
     func emitOne(event: [LaudspeakerEvent], completion: @escaping (LaudspeakerBatchUploadInfo) -> Void) {
         // Change to "events" endpoint
-        guard let url = URL(string: "events", relativeTo: config.host) else {
+        guard let url = URL(string: "testEvent", relativeTo: config.host) else {
             print("Malformed URL error.")
             return completion(LaudspeakerBatchUploadInfo(statusCode: nil, error: nil))
         }
