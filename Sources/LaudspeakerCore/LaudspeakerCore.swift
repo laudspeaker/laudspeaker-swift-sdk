@@ -46,9 +46,13 @@ public class UserDefaultsStorage: LaudspeakerStorage {
 
 public class LaudspeakerCore {
     
+    public var config: LaudspeakerConfig
     private var queue: LaudspeakerQueue?
     private var api: LaudspeakerApi?
     private var newStorage: LaudspeakerNewStorage?
+    private var reachability: Reachability?
+    
+    
     private var sessionManager: LaudspeakerSessionManager?
     private var sessionId: String?
     private var capturedAppInstalled = false
@@ -319,17 +323,38 @@ public class LaudspeakerCore {
         self.apiKey = apiKey
         self.isPushAutomated = isPushAutomated ?? false
         
+        self.config.apiKey = apiKey ?? "missing_api"
         var urlString = url ?? defaultURLString
         self.endpointUrl = urlString
         if let url = URL(string: urlString) {
-                self.api?.config.host = url
+                self.config.host = url
             } else {
                 print("Invalid URL string: \(urlString)")
                 // Handle the error as appropriate for your application
                 // For example, you might set a default URL or throw an error
             }
         //self.api?.config.host = urlString
-        self.api?.config.apiKey = apiKey ?? "missing_api"
+        
+        //self.config.host = apiKey ?? "missing_api"
+        print("values of config are")
+        print(self.config.apiKey)
+        print(self.config.host)
+        let theStorage = LaudspeakerNewStorage(self.config)
+        newStorage = theStorage;
+        let theApi = LaudspeakerApi(self.config)
+        api = theApi;
+        do {
+            reachability = try Reachability()
+        } catch {
+            // ignored
+        }
+        
+        print("init queue")
+        queue = LaudspeakerQueue(self.config, theStorage, theApi, reachability)
+        
+        queue?.start(disableReachabilityForTesting: config.disableReachabilityForTesting,
+                     disableQueueTimerForTesting: config.disableQueueTimerForTesting)
+        
         urlString = LaudspeakerCore.trimmedURL(from: urlString) ?? urlString
         guard let urlObject = URL(string: urlString) else {
             fatalError("Invalid URL")
