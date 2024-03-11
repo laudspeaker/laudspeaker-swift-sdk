@@ -321,6 +321,15 @@ public class LaudspeakerCore {
         
         var urlString = url ?? defaultURLString
         self.endpointUrl = urlString
+        if let url = URL(string: urlString) {
+                self.api?.config.host = url
+            } else {
+                print("Invalid URL string: \(urlString)")
+                // Handle the error as appropriate for your application
+                // For example, you might set a default URL or throw an error
+            }
+        //self.api?.config.host = urlString
+        self.api?.config.apiKey = apiKey ?? "missing_api"
         urlString = LaudspeakerCore.trimmedURL(from: urlString) ?? urlString
         guard let urlObject = URL(string: urlString) else {
             fatalError("Invalid URL")

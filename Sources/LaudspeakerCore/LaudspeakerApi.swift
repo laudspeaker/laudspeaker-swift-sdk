@@ -7,7 +7,7 @@
 import Foundation
 
 class LaudspeakerApi {
-    private let config: LaudspeakerConfig
+    public let config: LaudspeakerConfig
 
     // default is 60s but we do 10s
     private let defaultTimeout: TimeInterval = 10

@@ -17,8 +17,8 @@ import Foundation
     // 30 minutes in seconds
     private let sessionChangeThreshold: TimeInterval = 60 * 30
 
-    @objc public let host: URL
-    @objc public let apiKey: String
+    @objc public var host: URL
+    @objc public var apiKey: String
     @objc public var flushAt: Int = 1
     //@objc public var flushAt: Int = 1
     @objc public var maxQueueSize: Int = 1000
