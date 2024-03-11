@@ -513,7 +513,7 @@ public class LaudspeakerCore {
         }
     }
     
-    public func fireh(_ event: String,
+    public func fireH(_ event: String,
                         payload: [String: Any]? = nil,
                         userProperties: [String: Any]? = nil,
                         userPropertiesSetOnce: [String: Any]? = nil,
@@ -536,7 +536,8 @@ public class LaudspeakerCore {
             }
         }
         */
-
+    
+        
         queue.add(LaudspeakerEvent(
             event: event,
             distinctId: getDistinctId(),

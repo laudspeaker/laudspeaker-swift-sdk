@@ -19,7 +19,8 @@ import Foundation
 
     @objc public let host: URL
     @objc public let apiKey: String
-    @objc public var flushAt: Int = 20
+    @objc public var flushAt: Int = 1
+    //@objc public var flushAt: Int = 1
     @objc public var maxQueueSize: Int = 1000
     @objc public var maxBatchSize: Int = 50
     @objc public var flushIntervalSeconds: TimeInterval = 30

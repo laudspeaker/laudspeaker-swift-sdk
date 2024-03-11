@@ -70,7 +70,7 @@ public func sanitizeDicionary(_ dict: [String: Any]?) -> [String: Any]? {
         }
 
         newDict.removeValue(forKey: key)
-        hedgeLog("property: \(key) isn't serializable, dropping the item")
+        print("property: \(key) isn't serializable, dropping the item")
     }
 
     return newDict

@@ -69,9 +69,11 @@ public class LaudspeakerEvent {
 
     func toJSON() -> [String: Any] {
         [
+            "correlationKey": "_id",
+            "correlationValue": distinctId,
+            "source": "mobile",
             "event": event,
-            "distinct_id": distinctId,
-            "properties": properties,
+            "payload": properties,
             "timestamp": toISO8601String(timestamp),
             "uuid": uuid.uuidString,
         ]

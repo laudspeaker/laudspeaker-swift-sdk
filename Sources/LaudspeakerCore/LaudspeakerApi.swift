@@ -89,6 +89,136 @@ class LaudspeakerApi {
             return completion(LaudspeakerBatchUploadInfo(statusCode: httpResponse.statusCode, error: error))
         }.resume()
     }
+    
+    func emitOne(event: [LaudspeakerEvent], completion: @escaping (LaudspeakerBatchUploadInfo) -> Void) {
+        // Change to "events" endpoint
+        guard let url = URL(string: "events", relativeTo: config.host) else {
+            print("Malformed URL error.")
+            return completion(LaudspeakerBatchUploadInfo(statusCode: nil, error: nil))
+        }
+
+        let config = sessionConfig()
+        //var headers = config.httpAdditionalHeaders ?? [:]
+        var headers: [String: String] = [:]
+        headers["Accept-Encoding"] = "gzip"
+        headers["Content-Encoding"] = "gzip"
+        // Ensure Authorization and Content-Type are included in the headers
+        headers["Authorization"] = "Api-Key " + self.config.apiKey
+        headers["Content-Type"] = "application/json"
+        config.httpAdditionalHeaders = headers
+
+        // Prepare the URLRequest with the given URL
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        if let additionalHeaders = config.httpAdditionalHeaders as? [String: String] {
+            for (key, value) in additionalHeaders {
+                headers[key] = value
+            }
+        }
+        
+        request.allHTTPHeaderFields = headers
+
+        // Adjust the payload to exclude the API key and change "batch" to a relevant key for your event data
+        let toSend: [String: Any] = [
+            //"event": event.toJSON(),
+            "event": event.map { $0.toJSON() },
+            "sent_at": toISO8601String(Date()),
+        ]
+
+        var data: Data?
+        do {
+            data = try JSONSerialization.data(withJSONObject: toSend, options: [])
+        } catch {
+            print("Error parsing the event body: \(error)")
+            return completion(LaudspeakerBatchUploadInfo(statusCode: nil, error: error))
+        }
+
+        var gzippedPayload: Data?
+        do {
+            gzippedPayload = try data!.gzipped()
+        } catch {
+            print("Error gzipping the event body: \(error).")
+            return completion(LaudspeakerBatchUploadInfo(statusCode: nil, error: error))
+        }
+
+        URLSession(configuration: config).uploadTask(with: request, from: gzippedPayload!) { data, response, error in
+            if error != nil {
+                print("Error calling the events API: \(String(describing: error)).")
+                return completion(LaudspeakerBatchUploadInfo(statusCode: nil, error: error))
+            }
+
+            let httpResponse = response as! HTTPURLResponse
+
+            if !(200 ... 299 ~= httpResponse.statusCode) {
+                let errorMessage = "Error sending event to the events API: status: \(httpResponse.statusCode), body: \(String(describing: try? JSONSerialization.jsonObject(with: data!, options: .allowFragments) as? [String: Any]))."
+                print(errorMessage)
+            } else {
+                print("Event sent successfully.")
+            }
+
+            return completion(LaudspeakerBatchUploadInfo(statusCode: httpResponse.statusCode, error: error))
+        }.resume()
+    }
+
+
+    /*
+    func emitOne(event: LaudspeakerEvent, completion: @escaping (LaudspeakerBatchUploadInfo) -> Void) {
+        guard let url = URL(string: "batch", relativeTo: config.host) else {
+            print("Malformed batch URL error.")
+            return completion(LaudspeakerBatchUploadInfo(statusCode: nil, error: nil))
+        }
+
+        let config = sessionConfig()
+        var headers = config.httpAdditionalHeaders ?? [:]
+        headers["Accept-Encoding"] = "gzip"
+        headers["Content-Encoding"] = "gzip"
+        config.httpAdditionalHeaders = headers
+
+        let request = getURL(url)
+
+        let toSend: [String: Any] = [
+            "Api_Key": self.config.apiKey,
+            "batch":  { event.toJSON() },
+            "sent_at": toISO8601String(Date()),
+        ]
+
+        var data: Data?
+
+        do {
+            data = try JSONSerialization.data(withJSONObject: toSend)
+        } catch {
+            print("Error parsing the batch body: \(error)")
+            return completion(LaudspeakerBatchUploadInfo(statusCode: nil, error: error))
+        }
+
+        var gzippedPayload: Data?
+        do {
+            gzippedPayload = try data!.gzipped()
+        } catch {
+            print("Error gzipping the batch body: \(error).")
+            return completion(LaudspeakerBatchUploadInfo(statusCode: nil, error: error))
+        }
+
+        URLSession(configuration: config).uploadTask(with: request, from: gzippedPayload!) { data, response, error in
+            if error != nil {
+                print("Error calling the batch API: \(String(describing: error)).")
+                return completion(LaudspeakerBatchUploadInfo(statusCode: nil, error: error))
+            }
+
+            let httpResponse = response as! HTTPURLResponse
+
+            if !(200 ... 299 ~= httpResponse.statusCode) {
+                let errorMessage = "Error sending event to event API: status: \(httpResponse.statusCode), body: \(String(describing: try? JSONSerialization.jsonObject(with: data!, options: .allowFragments) as? [String: Any]))."
+                print(errorMessage)
+            } else {
+                print("Event sent successfully.")
+            }
+
+            return completion(LaudspeakerBatchUploadInfo(statusCode: httpResponse.statusCode, error: error))
+        }.resume()
+    }
+    */
 
     func decide(
         distinctId: String,

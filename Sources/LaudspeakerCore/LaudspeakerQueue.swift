@@ -74,6 +74,28 @@ class LaudspeakerQueue {
 
             payload.completion(!shouldRetry)
         }
+        
+        
+        api.emitOne(event: payload.events){ result in
+            // -1 means its not anything related to the API but rather network or something else, so we try again
+            let statusCode = result.statusCode ?? -1
+
+            var shouldRetry = false
+            if 300 ... 399 ~= statusCode || statusCode == -1 {
+                shouldRetry = true
+            }
+
+            if shouldRetry {
+                self.retryCount += 1
+                let delay = min(self.retryCount * self.retryDelay, self.maxRetryDelay)
+                self.pauseFor(seconds: delay)
+                print("Pausing queue consumption for \(delay) seconds due to \(self.retryCount) API failure(s).")
+            } else {
+                self.retryCount = 0
+            }
+
+            payload.completion(!shouldRetry)
+        }
     }
 
     func start(disableReachabilityForTesting: Bool,
@@ -139,7 +161,7 @@ class LaudspeakerQueue {
 
     func flush() {
         if !canFlush() {
-            //print("Already flushing")
+            print("Already flushing")
             return
         }
 
