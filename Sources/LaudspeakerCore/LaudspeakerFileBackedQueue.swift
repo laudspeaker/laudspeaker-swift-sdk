@@ -17,18 +17,16 @@ class LaudspeakerFileBackedQueue {
 
     init(queue: URL, oldQueue: URL) {
         self.queue = queue
-        //setup(oldQueue: oldQueue)
+        setup()
     }
-    /*
-    private func setup(oldQueue: URL?) {
+    
+    
+    
+    private func setup() {
         do {
             try FileManager.default.createDirectory(atPath: queue.path, withIntermediateDirectories: true)
         } catch {
             print("Error trying to create caching folder \(error)")
-        }
-
-        if oldQueue != nil {
-            migrateOldQueue(queue: queue, oldQueue: oldQueue!)
         }
 
         do {
@@ -39,7 +37,7 @@ class LaudspeakerFileBackedQueue {
             // failed to read directory – bad permissions, perhaps?
         }
     }
-    */
+    
 
     func peek(_ count: Int) -> [Data] {
         loadFiles(count)
