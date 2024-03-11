@@ -11,6 +11,11 @@ import CommonCrypto
 import Starscream
 import SocketIO
 
+let retryDelay = 5.0
+let maxRetryDelay = 30.0
+// 30 minutes in seconds
+private let sessionChangeThreshold: TimeInterval = 60 * 30
+
 public typealias PropertyDict = [String: Any]
 
 // for future tracker update
@@ -40,6 +45,21 @@ public class UserDefaultsStorage: LaudspeakerStorage {
 }
 
 public class LaudspeakerCore {
+    
+    private var queue: LaudspeakerQueue?
+    private var api: LaudspeakerApi?
+    private var newStorage: LaudspeakerNewStorage?
+    private var sessionManager: LaudspeakerSessionManager?
+    private var sessionId: String?
+    private var capturedAppInstalled = false
+    private var appFromBackground = false
+    private var sessionLastTimestamp: TimeInterval?
+    private var isInBackground = false
+    var now: () -> Date = { Date() }
+    
+    private let sessionLock = NSLock()
+    private let personPropsLock = NSLock()
+    
     private var storage: LaudspeakerStorage
     private let defaultURLString = "https://laudspeaker.com"
     private let manager: SocketManager
@@ -87,6 +107,211 @@ public class LaudspeakerCore {
         components.fragment = nil
 
         return components.string
+    }
+    
+    private func getRegisteredProperties() -> [String: Any] {
+        guard let props = newStorage?.getDictionary(forKey: .registerProperties) as? [String: Any] else {
+            return [:]
+        }
+        return props
+    }
+
+    // register is a reserved word in ObjC
+    @objc(registerProperties:)
+    public func register(_ properties: [String: Any]) {
+        /*
+        if !isEnabled() {
+            return
+        }
+        */
+
+        let sanitizedProps = sanitizeDicionary(properties)
+        if sanitizedProps == nil {
+            return
+        }
+
+        personPropsLock.withLock {
+            let props = getRegisteredProperties()
+            let mergedProps = props.merging(sanitizedProps!) { _, new in new }
+            newStorage?.setDictionary(forKey: .registerProperties, contents: mergedProps)
+        }
+    }
+
+    @objc(unregisterProperties:)
+    public func unregister(_ key: String) {
+        personPropsLock.withLock {
+            var props = getRegisteredProperties()
+            props.removeValue(forKey: key)
+            newStorage?.setDictionary(forKey: .registerProperties, contents: props)
+        }
+    }
+    
+    @objc public func getDistinctId() -> String {
+        /*
+        if !isEnabled() {
+            return ""
+        }
+         */
+        return sessionManager?.getDistinctId() ?? ""
+    }
+
+    @objc public func getAnonymousId() -> String {
+        /*
+        if !isEnabled() {
+            return ""
+        }
+        */
+        return sessionManager?.getAnonymousId() ?? ""
+    }
+    
+    private func rotateSessionIdIfRequired() {
+        guard sessionId != nil, let sessionLastTimestamp = sessionLastTimestamp else {
+            rotateSession()
+            return
+        }
+
+        if now().timeIntervalSince1970 - sessionLastTimestamp > sessionChangeThreshold {
+            rotateSession()
+        }
+    }
+
+    private func rotateSession() {
+        let newSessionId = UUID().uuidString
+        let newSessionLastTimestamp = now().timeIntervalSince1970
+
+        sessionLock.withLock {
+            sessionId = newSessionId
+            sessionLastTimestamp = newSessionLastTimestamp
+        }
+    }
+
+    // EVENT CAPTURE
+
+    private func dynamicContext() -> [String: Any] {
+        var properties = getRegisteredProperties()
+        
+        /*
+        var groups: [String: String]?
+        groupsLock.withLock {
+            groups = getGroups()
+        }
+        if groups != nil, !groups!.isEmpty {
+            properties["$groups"] = groups!
+        }
+        */
+
+        var theSessionId: String?
+        sessionLock.withLock {
+            theSessionId = sessionId
+        }
+        if let theSessionId = theSessionId {
+            properties["$session_id"] = theSessionId
+        }
+        
+        /*
+        guard let flags = featureFlags?.getFeatureFlags() as? [String: Any] else {
+            return properties
+        }
+        */
+        
+        /*
+        var keys: [String] = []
+        for (key, value) in flags {
+            properties["$feature/\(key)"] = value
+
+            var active = true
+            let boolValue = value as? Bool
+            if boolValue != nil {
+                active = boolValue!
+            } else {
+                active = true
+            }
+
+            if active {
+                keys.append(key)
+            }
+        }
+        */
+        
+        /*
+        if !keys.isEmpty {
+            properties["$active_feature_flags"] = keys
+        }
+        */
+
+        return properties
+    }
+    
+    private func buildProperties(properties: [String: Any]?,
+                                 userProperties: [String: Any]? = nil,
+                                 userPropertiesSetOnce: [String: Any]? = nil,
+                                 groupProperties: [String: Any]? = nil) -> [String: Any]
+    {
+        var props: [String: Any] = [:]
+
+        //let staticCtx = context?.staticContext()
+        //let dynamicCtx = context?.dynamicContext()
+        let localDynamicCtx = dynamicContext()
+        
+        /*
+        if staticCtx != nil {
+            props = props.merging(staticCtx ?? [:]) { current, _ in current }
+        }
+        if dynamicCtx != nil {
+            props = props.merging(dynamicCtx ?? [:]) { current, _ in current }
+        }
+        */
+        props = props.merging(localDynamicCtx) { current, _ in current }
+        if userProperties != nil {
+            props["$set"] = (userProperties ?? [:])
+        }
+        if userPropertiesSetOnce != nil {
+            props["$set_once"] = (userPropertiesSetOnce ?? [:])
+        }
+        
+        /*
+        if groupProperties != nil {
+            // $groups are also set via the dynamicContext
+            let currentGroups = props["$groups"] as? [String: Any] ?? [:]
+            let mergedGroups = currentGroups.merging(groupProperties ?? [:]) { current, _ in current }
+            props["$groups"] = mergedGroups
+        }
+        */
+        
+        props = props.merging(properties ?? [:]) { current, _ in current }
+
+        return props
+    }
+
+    @objc public func flush() {
+        /*
+        if !isEnabled() {
+            return
+        }
+        */
+
+        queue?.flush()
+    }
+
+    @objc public func reset() {
+        /*
+        if !isEnabled() {
+            return
+        }
+        */
+
+        // storage also removes all feature flags
+        newStorage?.reset()
+        queue?.clear()
+        //flagCallReported.removeAll()
+        resetSession()
+    }
+
+    private func resetSession() {
+        sessionLock.withLock {
+            sessionId = nil
+            sessionLastTimestamp = nil
+        }
     }
     
     public init(storage: LaudspeakerStorage? = nil, url: String? = nil, apiKey: String? = nil, isPushAutomated: Bool? = nil) {
@@ -286,6 +511,40 @@ public class LaudspeakerCore {
             }
             return
         }
+    }
+    
+    public func fireh(_ event: String,
+                        payload: [String: Any]? = nil,
+                        userProperties: [String: Any]? = nil,
+                        userPropertiesSetOnce: [String: Any]? = nil,
+                        groupProperties: [String: Any]? = nil)
+    {
+
+        guard let queue = queue else {
+            return
+        }
+
+        // If events fire in the background after the threshold, they should no longer have a sessionId
+        /*
+        if isInBackground,
+           sessionId != nil,
+           let sessionLastTimestamp = sessionLastTimestamp,
+           now().timeIntervalSince1970 - sessionLastTimestamp > sessionChangeThreshold
+        {
+            sessionLock.withLock {
+                sessionId = nil
+            }
+        }
+        */
+
+        queue.add(LaudspeakerEvent(
+            event: event,
+            distinctId: getDistinctId(),
+            properties: buildProperties(properties: sanitizeDicionary(payload),
+                                        userProperties: sanitizeDicionary(userProperties),
+                                        userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce),
+                                        groupProperties: sanitizeDicionary(groupProperties))
+        ))
     }
     
     public func fireS(event: String, payload: [String: Any]? = nil) {
