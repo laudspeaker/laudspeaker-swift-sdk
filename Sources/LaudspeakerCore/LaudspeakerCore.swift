@@ -595,7 +595,7 @@ public class LaudspeakerCore {
         
         print("adding to queu")
     
-        
+
         queue.add(eventToSend)
     }
     

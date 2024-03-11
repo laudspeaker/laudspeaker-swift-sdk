@@ -164,11 +164,14 @@ class LaudspeakerQueue {
             print("Already flushing")
             return
         }
+        
+        print("about to take")
 
         take(config.maxBatchSize) { payload in
             if !payload.events.isEmpty {
                 self.eventHandler(payload)
             } else {
+                print("nothing to be sent")
                 // there's nothing to be sent
                 payload.completion(true)
             }
@@ -176,6 +179,7 @@ class LaudspeakerQueue {
     }
 
     private func flushIfOverThreshold() {
+        print("in flush over thresh")
         if fileQueue.depth >= config.flushAt {
             flush()
         }
