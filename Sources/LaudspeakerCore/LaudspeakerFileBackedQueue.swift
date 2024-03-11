@@ -57,12 +57,13 @@ class LaudspeakerFileBackedQueue {
     }
 
     func add(_ contents: Data) {
+        print("adding to file queu");
         do {
             let filename = "\(Date().timeIntervalSince1970)"
             try contents.write(to: queue.appendingPathComponent(filename))
             items.append(filename)
         } catch {
-            //print("Could not write file \(error)")
+            print("Could not write file \(error)")
         }
     }
 

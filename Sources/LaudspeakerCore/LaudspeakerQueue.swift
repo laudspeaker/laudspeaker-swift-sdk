@@ -196,6 +196,10 @@ class LaudspeakerQueue {
             print("Tried to queue unserialisable LaudspeakerEvent \(error)")
             return
         }
+        
+        print("data to be added is")
+        
+        print(data)
 
         fileQueue.add(data!)
         print("Queued event '\(event.event)'. Depth: \(fileQueue.depth)")
