@@ -322,10 +322,13 @@ public class LaudspeakerCore {
         self.storage = storage ?? UserDefaultsStorage()
         self.apiKey = apiKey
         self.isPushAutomated = isPushAutomated ?? false
-        
-        self.config.apiKey = apiKey ?? "missing_api"
         var urlString = url ?? defaultURLString
         self.endpointUrl = urlString
+        
+        self.config = LaudspeakerConfig(apiKey: apiKey ?? "missing_api", host: urlString)
+        
+        //self.config.apiKey = apiKey ?? "missing_api"
+        
         if let url = URL(string: urlString) {
                 self.config.host = url
             } else {
