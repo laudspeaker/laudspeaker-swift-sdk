@@ -528,6 +528,8 @@ public class LaudspeakerCore {
                         userPropertiesSetOnce: [String: Any]? = nil,
                         groupProperties: [String: Any]? = nil)
     {
+        
+        print("in fireH")
 
         guard let queue = queue else {
             return
@@ -545,16 +547,28 @@ public class LaudspeakerCore {
             }
         }
         */
-    
         
-        queue.add(LaudspeakerEvent(
+        print("this is firing url")
+        
+        print(api?.config.host);
+        
+        let eventToSend = LaudspeakerEvent(
             event: event,
             distinctId: getDistinctId(),
             properties: buildProperties(properties: sanitizeDicionary(payload),
                                         userProperties: sanitizeDicionary(userProperties),
                                         userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce),
                                         groupProperties: sanitizeDicionary(groupProperties))
-        ))
+        )
+        
+        print("this is event")
+        
+        print(eventToSend)
+        
+        print("adding to queu")
+    
+        
+        queue.add(eventToSend)
     }
     
     public func fireS(event: String, payload: [String: Any]? = nil) {
