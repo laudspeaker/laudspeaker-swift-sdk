@@ -30,12 +30,44 @@ public class LaudspeakerEvent {
 
     // NOTE: Ideally we would use the NSCoding behaviour but it gets needlessly complex
     // given we only need this for sending to the API
+    
+    /*
     static func fromJSON(_ data: Data) -> LaudspeakerEvent? {
         guard let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
             return nil
         }
 
         return fromJSON(json)
+    }
+    */
+    
+    static func fromJSON(_ data: Data) -> LaudspeakerEvent? {
+        guard let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+              let payload = json["payload"] as? [String: Any] else {
+            return nil
+        }
+
+        return fromPayloadJSON(payload, withAdditionalInfo: json)
+    }
+
+    
+    static func fromPayloadJSON(_ payload: [String: Any], withAdditionalInfo info: [String: Any]) -> LaudspeakerEvent? {
+        guard let event = info["event"] as? String,
+              let distinctId = info["correlationValue"] as? String,
+              let timestampString = info["timestamp"] as? String,
+              let timestamp = toISO8601Date(timestampString),
+              let uuidString = info["uuid"] as? String,
+              let uuid = UUID(uuidString: uuidString) else {
+            return nil
+        }
+
+        return LaudspeakerEvent(
+            event: event,
+            distinctId: distinctId,
+            properties: payload, // Assuming properties are contained within "payload"
+            timestamp: timestamp,
+            uuid: uuid
+        )
     }
 
     static func fromJSON(_ json: [String: Any]) -> LaudspeakerEvent? {
