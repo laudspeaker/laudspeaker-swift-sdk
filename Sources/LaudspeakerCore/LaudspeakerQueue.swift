@@ -53,7 +53,8 @@ class LaudspeakerQueue {
 
     private func eventHandler(_ payload: LaudspeakerConsumerPayload) {
         print("Sending batch of \(payload.events.count) events to Laudspeaker")
-
+        
+        /*
         api.batch(events: payload.events) { result in
             // -1 means its not anything related to the API but rather network or something else, so we try again
             let statusCode = result.statusCode ?? -1
@@ -74,6 +75,7 @@ class LaudspeakerQueue {
 
             payload.completion(!shouldRetry)
         }
+        */
         
         
         api.emitOne(event: payload.events){ result in
