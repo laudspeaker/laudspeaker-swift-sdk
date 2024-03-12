@@ -222,8 +222,10 @@ class LaudspeakerQueue {
             for item in items {
                 // each element is a LaudspeakerEvent if fromJSON succeeds
                 guard let event = LaudspeakerEvent.fromJSON(item) else {
+                    print("Failed to deserialize item: \(item)")
                     continue
                 }
+                print("Deserialized event: \(event)")
                 processing.append(event)
             }
 
