@@ -188,7 +188,7 @@ public class LaudspeakerCore {
             sessionLastTimestamp = newSessionLastTimestamp
         }
     }
-
+    
     // EVENT CAPTURE
 
     private func dynamicContext() -> [String: Any] {
@@ -325,6 +325,7 @@ public class LaudspeakerCore {
         var urlString = url ?? defaultURLString
         self.endpointUrl = urlString
         
+        
         self.config = LaudspeakerConfig(apiKey: apiKey ?? "missing_api", host: urlString)
         
         //self.config.apiKey = apiKey ?? "missing_api"
@@ -342,6 +343,7 @@ public class LaudspeakerCore {
         print("values of config are")
         print(self.config.apiKey)
         print(self.config.host)
+        sessionManager = LaudspeakerSessionManager(self.config)
         let theStorage = LaudspeakerNewStorage(self.config)
         newStorage = theStorage;
         let theApi = LaudspeakerApi(self.config)
@@ -597,6 +599,55 @@ public class LaudspeakerCore {
     
 
         queue.add(eventToSend)
+    }
+    
+    
+    @objc public func identifyH(_ distinctId: String) {
+        identifyH(distinctId, userProperties: nil, userPropertiesSetOnce: nil)
+    }
+
+    @objc(identifyWithDistinctId:userProperties:)
+    public func identifyH(_ distinctId: String,
+                         userProperties: [String: Any]? = nil)
+    {
+        identifyH(distinctId, userProperties: userProperties, userPropertiesSetOnce: nil)
+    }
+
+    @objc(identifyWithDistinctId:userProperties:userPropertiesSetOnce:)
+    public func identifyH(_ distinctId: String,
+                         userProperties: [String: Any]? = nil,
+                         userPropertiesSetOnce: [String: Any]? = nil)
+    {
+        /*
+        if !isEnabled() {
+            return
+        }
+
+        if isOptOutState() {
+            return
+        }
+        */
+        
+        guard let queue = queue, let sessionManager = sessionManager else {
+            return
+        }
+        let oldDistinctId = getDistinctId()
+
+        queue.add(LaudspeakerEvent(
+            event: "$identify",
+            distinctId: distinctId,
+            properties: buildProperties(properties: [
+                "distinct_id": distinctId,
+                "$anon_distinct_id": getAnonymousId(),
+            ], userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+        ))
+
+        if distinctId != oldDistinctId {
+            // We keep the AnonymousId to be used by decide calls and identify to link the previousId
+            sessionManager.setAnonymousId(oldDistinctId)
+            sessionManager.setDistinctId(distinctId)
+
+        }
     }
     
     public func fireS(event: String, payload: [String: Any]? = nil) {
