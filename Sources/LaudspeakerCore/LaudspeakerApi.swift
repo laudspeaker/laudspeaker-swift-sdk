@@ -122,7 +122,7 @@ class LaudspeakerApi {
         // Adjust the payload to exclude the API key and change "batch" to a relevant key for your event data
         let toSend: [String: Any] = [
             //"event": event.toJSON(),
-            "event": event.map { $0.toJSON() },
+            "batch": event.map { $0.toJSON() },
             "sent_at": toISO8601String(Date()),
         ]
 
