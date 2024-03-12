@@ -216,10 +216,13 @@ class LaudspeakerQueue {
             }
 
             let items = self.fileQueue.peek(count)
-
+            print("items are");
+            //print(items)
+            
             var processing = [LaudspeakerEvent]()
 
             for item in items {
+                print(item)
                 // each element is a LaudspeakerEvent if fromJSON succeeds
                 guard let event = LaudspeakerEvent.fromJSON(item) else {
                     print("Failed to deserialize item: \(item)")
