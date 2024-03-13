@@ -651,7 +651,7 @@ public class LaudspeakerCore {
     }
     
     //
-    public func setH(_ payload: [String: Any]? = nil,
+    public func setH(_ properties: [String: Any]? = nil,
                          userProperties: [String: Any]? = nil,
                          userPropertiesSetOnce: [String: Any]? = nil)
     {
@@ -673,7 +673,7 @@ public class LaudspeakerCore {
         queue.add(LaudspeakerEvent(
             event: "$set",
             distinctId: getAnonymousId(),
-            properties: buildProperties(properties: sanitizeDicionary(payload), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+            properties: buildProperties(properties: sanitizeDicionary(properties), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
         ))
         
     }
