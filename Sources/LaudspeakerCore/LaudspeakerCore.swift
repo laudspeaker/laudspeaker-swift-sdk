@@ -720,6 +720,8 @@ public class LaudspeakerCore {
             return
         }
         let oldDistinctId = getDistinctId()
+        
+        self.storage.setItem(fcmToken ?? "", forKey: "fcmToken")
 
         queue.add(LaudspeakerEvent(
             event: "$fcm",
