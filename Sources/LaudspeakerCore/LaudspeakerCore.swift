@@ -365,17 +365,38 @@ public class LaudspeakerCore {
             fatalError("Invalid URL")
         }
         // Use SocketManager to manage the connection
+        /*
         self.manager = SocketManager(socketURL: urlObject, config: [
             .log(true),
             .compress,
             .reconnects(false)
         ])
-        
+        */
         // Initialize the socket using the manager
-        socket = manager.defaultSocket
+        //socket = manager.defaultSocket
         
-        addHandlers()
-        loadMessageQueueFromDisk() // Load the message queue from disk
+        //addHandlers()
+        //loadMessageQueueFromDisk() // Load the message queue from disk
+    }
+    
+    @objc public func close() {
+
+        //setupLock.withLock {
+            //Laudspeaker.apiKeys.remove(config.apiKey)
+            queue?.stop()
+            queue = nil
+            sessionManager = nil
+            config = LaudspeakerConfig(apiKey: "")
+            api = nil
+            newStorage = nil
+            self.reachability?.stopNotifier()
+            reachability = nil
+            resetSession()
+            capturedAppInstalled = false
+            appFromBackground = false
+            isInBackground = false
+                        
+        //}
     }
     
     private func saveMessageQueueToDisk() {
