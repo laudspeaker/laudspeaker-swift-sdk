@@ -11,6 +11,11 @@ import CommonCrypto
 import Starscream
 import SocketIO
 
+let retryDelay = 5.0
+let maxRetryDelay = 30.0
+// 30 minutes in seconds
+private let sessionChangeThreshold: TimeInterval = 60 * 30
+
 public typealias PropertyDict = [String: Any]
 
 // for future tracker update
@@ -40,10 +45,29 @@ public class UserDefaultsStorage: LaudspeakerStorage {
 }
 
 public class LaudspeakerCore {
+    
+    public var config: LaudspeakerConfig
+    private var queue: LaudspeakerQueue?
+    private var api: LaudspeakerApi?
+    private var newStorage: LaudspeakerNewStorage?
+    private var reachability: Reachability?
+    
+    
+    private var sessionManager: LaudspeakerSessionManager?
+    private var sessionId: String?
+    private var capturedAppInstalled = false
+    private var appFromBackground = false
+    private var sessionLastTimestamp: TimeInterval?
+    private var isInBackground = false
+    var now: () -> Date = { Date() }
+    
+    private let sessionLock = NSLock()
+    private let personPropsLock = NSLock()
+    
     private var storage: LaudspeakerStorage
     private let defaultURLString = "https://laudspeaker.com"
-    private let manager: SocketManager
-    private var socket: SocketIOClient?
+    ///private let manager: SocketManager
+    //private var socket: SocketIOClient?
     private var apiKey: String?
     private var isPushAutomated: Bool = false
     public var isConnected: Bool = false
@@ -89,29 +113,290 @@ public class LaudspeakerCore {
         return components.string
     }
     
+    private func getRegisteredProperties() -> [String: Any] {
+        guard let props = newStorage?.getDictionary(forKey: .registerProperties) as? [String: Any] else {
+            return [:]
+        }
+        return props
+    }
+
+    // register is a reserved word in ObjC
+    @objc(registerProperties:)
+    public func register(_ properties: [String: Any]) {
+        /*
+        if !isEnabled() {
+            return
+        }
+        */
+
+        let sanitizedProps = sanitizeDicionary(properties)
+        if sanitizedProps == nil {
+            return
+        }
+
+        personPropsLock.withLock {
+            let props = getRegisteredProperties()
+            let mergedProps = props.merging(sanitizedProps!) { _, new in new }
+            newStorage?.setDictionary(forKey: .registerProperties, contents: mergedProps)
+        }
+    }
+
+    @objc(unregisterProperties:)
+    public func unregister(_ key: String) {
+        personPropsLock.withLock {
+            var props = getRegisteredProperties()
+            props.removeValue(forKey: key)
+            newStorage?.setDictionary(forKey: .registerProperties, contents: props)
+        }
+    }
+    
+    @objc public func getDistinctId() -> String {
+        /*
+        if !isEnabled() {
+            return ""
+        }
+         */
+        return sessionManager?.getDistinctId() ?? ""
+    }
+
+    @objc public func getAnonymousId() -> String {
+        /*
+        if !isEnabled() {
+            return ""
+        }
+        */
+        return sessionManager?.getAnonymousId() ?? ""
+    }
+    
+    private func rotateSessionIdIfRequired() {
+        guard sessionId != nil, let sessionLastTimestamp = sessionLastTimestamp else {
+            rotateSession()
+            return
+        }
+
+        if now().timeIntervalSince1970 - sessionLastTimestamp > sessionChangeThreshold {
+            rotateSession()
+        }
+    }
+
+    private func rotateSession() {
+        let newSessionId = UUID().uuidString
+        let newSessionLastTimestamp = now().timeIntervalSince1970
+
+        sessionLock.withLock {
+            sessionId = newSessionId
+            sessionLastTimestamp = newSessionLastTimestamp
+        }
+    }
+    
+    // EVENT CAPTURE
+
+    private func dynamicContext() -> [String: Any] {
+        var properties = getRegisteredProperties()
+        
+        /*
+        var groups: [String: String]?
+        groupsLock.withLock {
+            groups = getGroups()
+        }
+        if groups != nil, !groups!.isEmpty {
+            properties["$groups"] = groups!
+        }
+        */
+
+        var theSessionId: String?
+        sessionLock.withLock {
+            theSessionId = sessionId
+        }
+        if let theSessionId = theSessionId {
+            properties["$session_id"] = theSessionId
+        }
+        
+        /*
+        guard let flags = featureFlags?.getFeatureFlags() as? [String: Any] else {
+            return properties
+        }
+        */
+        
+        /*
+        var keys: [String] = []
+        for (key, value) in flags {
+            properties["$feature/\(key)"] = value
+
+            var active = true
+            let boolValue = value as? Bool
+            if boolValue != nil {
+                active = boolValue!
+            } else {
+                active = true
+            }
+
+            if active {
+                keys.append(key)
+            }
+        }
+        */
+        
+        /*
+        if !keys.isEmpty {
+            properties["$active_feature_flags"] = keys
+        }
+        */
+
+        return properties
+    }
+    
+    private func buildProperties(properties: [String: Any]?,
+                                 userProperties: [String: Any]? = nil,
+                                 userPropertiesSetOnce: [String: Any]? = nil,
+                                 groupProperties: [String: Any]? = nil) -> [String: Any]
+    {
+        var props: [String: Any] = [:]
+
+        //let staticCtx = context?.staticContext()
+        //let dynamicCtx = context?.dynamicContext()
+        let localDynamicCtx = dynamicContext()
+        
+        /*
+        if staticCtx != nil {
+            props = props.merging(staticCtx ?? [:]) { current, _ in current }
+        }
+        if dynamicCtx != nil {
+            props = props.merging(dynamicCtx ?? [:]) { current, _ in current }
+        }
+        */
+        props = props.merging(localDynamicCtx) { current, _ in current }
+        if userProperties != nil {
+            props["$set"] = (userProperties ?? [:])
+        }
+        if userPropertiesSetOnce != nil {
+            props["$set_once"] = (userPropertiesSetOnce ?? [:])
+        }
+        
+        /*
+        if groupProperties != nil {
+            // $groups are also set via the dynamicContext
+            let currentGroups = props["$groups"] as? [String: Any] ?? [:]
+            let mergedGroups = currentGroups.merging(groupProperties ?? [:]) { current, _ in current }
+            props["$groups"] = mergedGroups
+        }
+        */
+        
+        props = props.merging(properties ?? [:]) { current, _ in current }
+
+        return props
+    }
+
+    @objc public func flush() {
+        /*
+        if !isEnabled() {
+            return
+        }
+        */
+
+        queue?.flush()
+    }
+
+    @objc public func reset() {
+        /*
+        if !isEnabled() {
+            return
+        }
+        */
+
+        // storage also removes all feature flags
+        newStorage?.reset()
+        queue?.clear()
+        //flagCallReported.removeAll()
+        resetSession()
+    }
+
+    private func resetSession() {
+        sessionLock.withLock {
+            sessionId = nil
+            sessionLastTimestamp = nil
+        }
+    }
+    
     public init(storage: LaudspeakerStorage? = nil, url: String? = nil, apiKey: String? = nil, isPushAutomated: Bool? = nil) {
         self.storage = storage ?? UserDefaultsStorage()
         self.apiKey = apiKey
         self.isPushAutomated = isPushAutomated ?? false
-        
         var urlString = url ?? defaultURLString
         self.endpointUrl = urlString
+        
+        
+        self.config = LaudspeakerConfig(apiKey: apiKey ?? "missing_api", host: urlString)
+        
+        //self.config.apiKey = apiKey ?? "missing_api"
+        
+        if let url = URL(string: urlString) {
+                self.config.host = url
+            } else {
+                print("Invalid URL string: \(urlString)")
+                // Handle the error as appropriate for your application
+                // For example, you might set a default URL or throw an error
+            }
+        //self.api?.config.host = urlString
+        
+        //self.config.host = apiKey ?? "missing_api"
+        print("values of config are")
+        print(self.config.apiKey)
+        print(self.config.host)
+        sessionManager = LaudspeakerSessionManager(self.config)
+        let theStorage = LaudspeakerNewStorage(self.config)
+        newStorage = theStorage;
+        let theApi = LaudspeakerApi(self.config)
+        api = theApi;
+        do {
+            reachability = try Reachability()
+        } catch {
+            // ignored
+        }
+        
+        print("init queue")
+        queue = LaudspeakerQueue(self.config, theStorage, theApi, reachability)
+        
+        queue?.start(disableReachabilityForTesting: config.disableReachabilityForTesting,
+                     disableQueueTimerForTesting: config.disableQueueTimerForTesting)
+        
         urlString = LaudspeakerCore.trimmedURL(from: urlString) ?? urlString
         guard let urlObject = URL(string: urlString) else {
             fatalError("Invalid URL")
         }
         // Use SocketManager to manage the connection
+        /*
         self.manager = SocketManager(socketURL: urlObject, config: [
             .log(true),
             .compress,
             .reconnects(false)
         ])
-        
+        */
         // Initialize the socket using the manager
-        socket = manager.defaultSocket
+        //socket = manager.defaultSocket
         
-        addHandlers()
-        loadMessageQueueFromDisk() // Load the message queue from disk
+        //addHandlers()
+        //loadMessageQueueFromDisk() // Load the message queue from disk
+    }
+    
+    @objc public func close() {
+
+        //setupLock.withLock {
+            //Laudspeaker.apiKeys.remove(config.apiKey)
+            queue?.stop()
+            queue = nil
+            sessionManager = nil
+            config = LaudspeakerConfig(apiKey: "")
+            api = nil
+            newStorage = nil
+            self.reachability?.stopNotifier()
+            reachability = nil
+            resetSession()
+            capturedAppInstalled = false
+            appFromBackground = false
+            isInBackground = false
+                        
+        //}
     }
     
     private func saveMessageQueueToDisk() {
@@ -125,6 +410,7 @@ public class LaudspeakerCore {
         return paths[0]
     }
     
+    /*
     private func addHandlers() {
         socket?.on(clientEvent: .connect) { [weak self] data, ack in
             print("LaudspeakerCore connected")
@@ -192,7 +478,8 @@ public class LaudspeakerCore {
         print("added all handlers")
     }
     
-    public func identify(distinctId: String, optionalProperties: PropertyDict? = nil) {
+    
+    public func identifyOld(distinctId: String, optionalProperties: PropertyDict? = nil) {
         // Ensure the socket is connected before attempting to write
         /*
         guard isConnected else {
@@ -210,7 +497,7 @@ public class LaudspeakerCore {
         emitMessage(channel: "identify", payload: messageDict)
     }
     
-    public func set(properties: PropertyDict) {
+    public func setOld(properties: PropertyDict) {
         // Ensure the socket is connected before attempting to write
         /*
         guard isConnected else {
@@ -226,7 +513,7 @@ public class LaudspeakerCore {
         
     }
     
-    public func sendFCMToken(fcmToken: String? = nil) {
+    public func sendFCMTokenOld(fcmToken: String? = nil) {
         /*
         guard isConnected else {
             print("Impossible to send token: no connection to API. Try to init connection first")
@@ -287,6 +574,169 @@ public class LaudspeakerCore {
             return
         }
     }
+    */
+    
+    public func fire( event: String,
+                        payload: [String: Any]? = nil,
+                        userProperties: [String: Any]? = nil,
+                        userPropertiesSetOnce: [String: Any]? = nil,
+                        groupProperties: [String: Any]? = nil)
+    {
+        
+        print("in fireH")
+
+        guard let queue = queue else {
+            return
+        }
+
+        // If events fire in the background after the threshold, they should no longer have a sessionId
+        /*
+        if isInBackground,
+           sessionId != nil,
+           let sessionLastTimestamp = sessionLastTimestamp,
+           now().timeIntervalSince1970 - sessionLastTimestamp > sessionChangeThreshold
+        {
+            sessionLock.withLock {
+                sessionId = nil
+            }
+        }
+        */
+        
+        print("this is firing url")
+        
+        print(api?.config.host);
+        
+        let eventToSend = LaudspeakerEvent(
+            event: event,
+            distinctId: getAnonymousId(),
+            properties: buildProperties(properties: sanitizeDicionary(payload),
+                                        userProperties: sanitizeDicionary(userProperties),
+                                        userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce),
+                                        groupProperties: sanitizeDicionary(groupProperties))
+        )
+        
+        print("this is event")
+        
+        print(eventToSend)
+        
+        print("adding to queu")
+    
+
+        queue.add(eventToSend)
+    }
+    
+    
+    @objc public func identify( distinctId: String) {
+        identify(distinctId: distinctId, userProperties: nil, userPropertiesSetOnce: nil)
+    }
+
+    @objc(identifyWithDistinctId:userProperties:)
+    public func identify( distinctId: String,
+                         userProperties: [String: Any]? = nil)
+    {
+        identify( distinctId: distinctId, userProperties: userProperties, userPropertiesSetOnce: nil)
+    }
+
+    @objc(identifyWithDistinctId:userProperties:userPropertiesSetOnce:)
+    public func identify( distinctId: String,
+                         userProperties: [String: Any]? = nil,
+                         userPropertiesSetOnce: [String: Any]? = nil)
+    {
+        /*
+        if !isEnabled() {
+            return
+        }
+
+        if isOptOutState() {
+            return
+        }
+        */
+        
+        guard let queue = queue, let sessionManager = sessionManager else {
+            return
+        }
+        let oldDistinctId = getDistinctId()
+        
+        var properties: [String: Any] = [
+            "distinct_id": distinctId,
+            "$anon_distinct_id": getAnonymousId()
+        ]
+        
+        properties.merge(userProperties ?? [:]) { (current, _) in current }
+
+        queue.add(LaudspeakerEvent(
+            event: "$identify",
+            distinctId: getAnonymousId(),
+            properties: buildProperties(properties: properties,  userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+        ))
+
+        if distinctId != oldDistinctId {
+            // We keep the AnonymousId to be used by decide calls and identify to link the previousId
+            sessionManager.setAnonymousId(oldDistinctId)
+            sessionManager.setDistinctId(distinctId)
+
+        }
+    }
+    
+    //
+    public func set( properties: [String: Any]? = nil,
+                         userProperties: [String: Any]? = nil,
+                         userPropertiesSetOnce: [String: Any]? = nil)
+    {
+        /*
+        if !isEnabled() {
+            return
+        }
+
+        if isOptOutState() {
+            return
+        }
+        */
+        
+        guard let queue = queue, let sessionManager = sessionManager else {
+            return
+        }
+        //let oldDistinctId = getDistinctId()
+
+        queue.add(LaudspeakerEvent(
+            event: "$set",
+            distinctId: getAnonymousId(),
+            properties: buildProperties(properties: sanitizeDicionary(properties), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+        ))
+        
+    }
+    
+    //
+    
+    public func sendFCMToken( fcmToken: String? = nil, userProperties: [String: Any]? = nil, userPropertiesSetOnce: [String: Any]? = nil, groupProperties: [String: Any]? = nil)
+    {
+        /*
+        if !isEnabled() {
+            return
+        }
+
+        if isOptOutState() {
+            return
+        }
+        */
+        
+        guard let queue = queue, let sessionManager = sessionManager else {
+            return
+        }
+        let oldDistinctId = getDistinctId()
+        
+        self.storage.setItem(fcmToken ?? "", forKey: "fcmToken")
+
+        queue.add(LaudspeakerEvent(
+            event: "$fcm",
+            distinctId: getAnonymousId(),
+            properties: buildProperties(properties: [
+                "iosDeviceToken": fcmToken ?? "",
+            ], userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+        ))
+
+        
+    }
     
     public func fireS(event: String, payload: [String: Any]? = nil) {
         // Initialize payload string
@@ -340,7 +790,8 @@ public class LaudspeakerCore {
 
     }
     
-    public func fire(event: String, payload: [String: Any]? = nil) {
+    /*
+    public func fireOld(event: String, payload: [String: Any]? = nil) {
         // Initialize payload string
         let customerId = self.getCustomerId()
         var payloadString = "{}"
@@ -433,17 +884,6 @@ public class LaudspeakerCore {
             //}
         }
     }
-
-    /*
-    func reconnectWithUpdatedParams() {
-        // Update authParams with the latest customerId
-        authParams["customerId"] = self.storage.getItem(forKey: "customerId") ?? ""
-        
-        // Now attempt to reconnect with updated parameters
-        socket?.disconnect() // Ensure socket is disconnected
-        socket?.connect(withPayload: authParams)
-    }
-    */
     
     public func queueMessage(event: String, payload: [String: Any]) {
         let messageDict: [String: Any] = ["event": event, "payload": payload]
@@ -492,5 +932,6 @@ public class LaudspeakerCore {
                 return
             }
     }
+    */
     
 }
