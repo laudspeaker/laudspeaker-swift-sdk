@@ -584,7 +584,7 @@ public class LaudspeakerCore {
         
         let eventToSend = LaudspeakerEvent(
             event: event,
-            distinctId: getDistinctId(),
+            distinctId: getAnonymousId(),
             properties: buildProperties(properties: sanitizeDicionary(payload),
                                         userProperties: sanitizeDicionary(userProperties),
                                         userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce),
@@ -635,7 +635,7 @@ public class LaudspeakerCore {
 
         queue.add(LaudspeakerEvent(
             event: "$identify",
-            distinctId: distinctId,
+            distinctId: getAnonymousId(),
             properties: buildProperties(properties: [
                 "distinct_id": distinctId,
                 "$anon_distinct_id": getAnonymousId(),
@@ -672,7 +672,7 @@ public class LaudspeakerCore {
 
         queue.add(LaudspeakerEvent(
             event: "$set",
-            distinctId: getDistinctId(),
+            distinctId: getAnonymousId(),
             properties: buildProperties(properties: sanitizeDicionary(payload), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
         ))
         
@@ -699,7 +699,7 @@ public class LaudspeakerCore {
 
         queue.add(LaudspeakerEvent(
             event: "$fcm",
-            distinctId: getDistinctId(),
+            distinctId: getAnonymousId(),
             properties: buildProperties(properties: [
                 "iosDeviceToken": fcmToken ?? "",
             ], userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
