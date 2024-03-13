@@ -650,6 +650,64 @@ public class LaudspeakerCore {
         }
     }
     
+    //
+    public func setH(_ payload: [String: Any]? = nil,
+                         userProperties: [String: Any]? = nil,
+                         userPropertiesSetOnce: [String: Any]? = nil)
+    {
+        /*
+        if !isEnabled() {
+            return
+        }
+
+        if isOptOutState() {
+            return
+        }
+        */
+        
+        guard let queue = queue, let sessionManager = sessionManager else {
+            return
+        }
+        //let oldDistinctId = getDistinctId()
+
+        queue.add(LaudspeakerEvent(
+            event: "$set",
+            distinctId: getDistinctId(),
+            properties: buildProperties(properties: sanitizeDicionary(payload), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+        ))
+        
+    }
+    
+    //
+    
+    public func sendFCMH(_ fcmToken: String? = nil, userProperties: [String: Any]? = nil, userPropertiesSetOnce: [String: Any]? = nil, groupProperties: [String: Any]? = nil)
+    {
+        /*
+        if !isEnabled() {
+            return
+        }
+
+        if isOptOutState() {
+            return
+        }
+        */
+        
+        guard let queue = queue, let sessionManager = sessionManager else {
+            return
+        }
+        let oldDistinctId = getDistinctId()
+
+        queue.add(LaudspeakerEvent(
+            event: "$fcm",
+            distinctId: getDistinctId(),
+            properties: buildProperties(properties: [
+                "iosDeviceToken": fcmToken ?? "",
+            ], userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+        ))
+
+        
+    }
+    
     public func fireS(event: String, payload: [String: Any]? = nil) {
         // Initialize payload string
         let customerId = self.getCustomerId()
