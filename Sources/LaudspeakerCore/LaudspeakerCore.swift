@@ -656,14 +656,18 @@ public class LaudspeakerCore {
             return
         }
         let oldDistinctId = getDistinctId()
+        
+        var properties: [String: Any] = [
+            "distinct_id": distinctId,
+            "$anon_distinct_id": getAnonymousId()
+        ]
+        
+        properties.merge(userProperties ?? [:]) { (current, _) in current }
 
         queue.add(LaudspeakerEvent(
             event: "$identify",
             distinctId: getAnonymousId(),
-            properties: buildProperties(properties: [
-                "distinct_id": distinctId,
-                "$anon_distinct_id": getAnonymousId(),
-            ], userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+            properties: buildProperties(properties: properties,  userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
         ))
 
         if distinctId != oldDistinctId {
