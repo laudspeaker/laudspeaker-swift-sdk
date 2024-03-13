@@ -66,8 +66,8 @@ public class LaudspeakerCore {
     
     private var storage: LaudspeakerStorage
     private let defaultURLString = "https://laudspeaker.com"
-    private let manager: SocketManager
-    private var socket: SocketIOClient?
+    ///private let manager: SocketManager
+    //private var socket: SocketIOClient?
     private var apiKey: String?
     private var isPushAutomated: Bool = false
     public var isConnected: Bool = false
@@ -410,6 +410,7 @@ public class LaudspeakerCore {
         return paths[0]
     }
     
+    /*
     private func addHandlers() {
         socket?.on(clientEvent: .connect) { [weak self] data, ack in
             print("LaudspeakerCore connected")
@@ -476,6 +477,7 @@ public class LaudspeakerCore {
         
         print("added all handlers")
     }
+    
     
     public func identifyOld(distinctId: String, optionalProperties: PropertyDict? = nil) {
         // Ensure the socket is connected before attempting to write
@@ -572,6 +574,7 @@ public class LaudspeakerCore {
             return
         }
     }
+    */
     
     public func fire( event: String,
                         payload: [String: Any]? = nil,
@@ -781,6 +784,7 @@ public class LaudspeakerCore {
 
     }
     
+    /*
     public func fireOld(event: String, payload: [String: Any]? = nil) {
         // Initialize payload string
         let customerId = self.getCustomerId()
@@ -874,17 +878,6 @@ public class LaudspeakerCore {
             //}
         }
     }
-
-    /*
-    func reconnectWithUpdatedParams() {
-        // Update authParams with the latest customerId
-        authParams["customerId"] = self.storage.getItem(forKey: "customerId") ?? ""
-        
-        // Now attempt to reconnect with updated parameters
-        socket?.disconnect() // Ensure socket is disconnected
-        socket?.connect(withPayload: authParams)
-    }
-    */
     
     public func queueMessage(event: String, payload: [String: Any]) {
         let messageDict: [String: Any] = ["event": event, "payload": payload]
@@ -933,5 +926,6 @@ public class LaudspeakerCore {
                 return
             }
     }
+    */
     
 }
