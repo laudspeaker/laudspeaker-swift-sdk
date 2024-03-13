@@ -456,7 +456,7 @@ public class LaudspeakerCore {
         print("added all handlers")
     }
     
-    public func identify(distinctId: String, optionalProperties: PropertyDict? = nil) {
+    public func identifyOld(distinctId: String, optionalProperties: PropertyDict? = nil) {
         // Ensure the socket is connected before attempting to write
         /*
         guard isConnected else {
@@ -474,7 +474,7 @@ public class LaudspeakerCore {
         emitMessage(channel: "identify", payload: messageDict)
     }
     
-    public func set(properties: PropertyDict) {
+    public func setOld(properties: PropertyDict) {
         // Ensure the socket is connected before attempting to write
         /*
         guard isConnected else {
@@ -490,7 +490,7 @@ public class LaudspeakerCore {
         
     }
     
-    public func sendFCMToken(fcmToken: String? = nil) {
+    public func sendFCMTokenOld(fcmToken: String? = nil) {
         /*
         guard isConnected else {
             print("Impossible to send token: no connection to API. Try to init connection first")
@@ -552,7 +552,7 @@ public class LaudspeakerCore {
         }
     }
     
-    public func fireH(_ event: String,
+    public func fire( event: String,
                         payload: [String: Any]? = nil,
                         userProperties: [String: Any]? = nil,
                         userPropertiesSetOnce: [String: Any]? = nil,
@@ -602,19 +602,19 @@ public class LaudspeakerCore {
     }
     
     
-    @objc public func identifyH(_ distinctId: String) {
-        identifyH(distinctId, userProperties: nil, userPropertiesSetOnce: nil)
+    @objc public func identify( distinctId: String) {
+        identify(distinctId: distinctId, userProperties: nil, userPropertiesSetOnce: nil)
     }
 
     @objc(identifyWithDistinctId:userProperties:)
-    public func identifyH(_ distinctId: String,
+    public func identify( distinctId: String,
                          userProperties: [String: Any]? = nil)
     {
-        identifyH(distinctId, userProperties: userProperties, userPropertiesSetOnce: nil)
+        identify( distinctId: distinctId, userProperties: userProperties, userPropertiesSetOnce: nil)
     }
 
     @objc(identifyWithDistinctId:userProperties:userPropertiesSetOnce:)
-    public func identifyH(_ distinctId: String,
+    public func identify( distinctId: String,
                          userProperties: [String: Any]? = nil,
                          userPropertiesSetOnce: [String: Any]? = nil)
     {
@@ -651,7 +651,7 @@ public class LaudspeakerCore {
     }
     
     //
-    public func setH(_ properties: [String: Any]? = nil,
+    public func set( properties: [String: Any]? = nil,
                          userProperties: [String: Any]? = nil,
                          userPropertiesSetOnce: [String: Any]? = nil)
     {
@@ -680,7 +680,7 @@ public class LaudspeakerCore {
     
     //
     
-    public func sendFCMH(_ fcmToken: String? = nil, userProperties: [String: Any]? = nil, userPropertiesSetOnce: [String: Any]? = nil, groupProperties: [String: Any]? = nil)
+    public func sendFCMToken( fcmToken: String? = nil, userProperties: [String: Any]? = nil, userPropertiesSetOnce: [String: Any]? = nil, groupProperties: [String: Any]? = nil)
     {
         /*
         if !isEnabled() {
@@ -760,7 +760,7 @@ public class LaudspeakerCore {
 
     }
     
-    public func fire(event: String, payload: [String: Any]? = nil) {
+    public func fireOld(event: String, payload: [String: Any]? = nil) {
         // Initialize payload string
         let customerId = self.getCustomerId()
         var payloadString = "{}"
