@@ -672,7 +672,7 @@ public class LaudspeakerCore {
 
         if distinctId != oldDistinctId {
             // We keep the AnonymousId to be used by decide calls and identify to link the previousId
-            sessionManager.setAnonymousId(oldDistinctId)
+            //sessionManager.setAnonymousId(oldDistinctId)
             sessionManager.setDistinctId(distinctId)
 
         }
