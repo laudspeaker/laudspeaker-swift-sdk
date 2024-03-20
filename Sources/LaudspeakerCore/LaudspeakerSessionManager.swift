@@ -19,7 +19,7 @@ class LaudspeakerSessionManager {
         anonLock.withLock {
             anonymousId = storage.getString(forKey: .anonymousId)
 
-            if anonymousId == nil {
+            if anonymousId == nil || anonymousId == "" {
                 anonymousId = UUID().uuidString
                 setAnonId(anonymousId ?? "")
             }

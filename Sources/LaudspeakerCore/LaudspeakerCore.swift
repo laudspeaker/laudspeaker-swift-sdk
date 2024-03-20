@@ -165,7 +165,7 @@ public class LaudspeakerCore {
             return ""
         }
         */
-        return sessionManager?.getAnonymousId() ?? ""
+        return sessionManager!.getAnonymousId() //?? ""
     }
     
     private func rotateSessionIdIfRequired() {
