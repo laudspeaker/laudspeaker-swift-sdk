@@ -951,6 +951,8 @@ public class LaudspeakerCore {
         print("adfasf")
         //print(a)
         print("adfasf")
+        let array = [1, 2, 3]
+        let element = array[5]
         //throwError()
         crashWithStackOverflow()
 
