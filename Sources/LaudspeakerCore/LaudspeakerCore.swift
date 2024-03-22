@@ -937,11 +937,24 @@ public class LaudspeakerCore {
     }
     */
     
+    func throwError() throws {
+        let error = NSError(domain: "com.example.error", code: 1001, userInfo: [NSLocalizedDescriptionKey: "This is a simulated error"])
+        throw error
+    }
+    
     public func testSentryIntegration() {
         let a = SentrySDK.capture(message: "Test error for Sentry integration")
         print("adfasf")
         print(a)
         print("adfasf")
+        do {
+                // Attempt to run a function that may throw an error
+                try throwError()
+            } catch let error as NSError {
+                // Manually capture the error with Sentry upon catching it
+                //SentrySDK.capture(error: error)
+                //print("Error captured by Sentry: \(error.localizedDescription)")
+            }
         //fatalError("Sentry integration test crash")
         SentrySDK.capture(message: "Test error 2 for Sentry integration")
     }
