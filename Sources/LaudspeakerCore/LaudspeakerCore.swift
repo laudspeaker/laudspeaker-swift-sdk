@@ -10,6 +10,7 @@ import CryptoKit
 import CommonCrypto
 import Starscream
 import SocketIO
+import Sentry
 
 let retryDelay = 5.0
 let maxRetryDelay = 30.0
@@ -937,7 +938,9 @@ public class LaudspeakerCore {
     */
     
     public func testSentryIntegration() {
+        SentrySDK.capture(message: "Test error for Sentry integration")
         fatalError("Sentry integration test crash")
+        SentrySDK.capture(message: "Test error 2 for Sentry integration")
     }
     
 }
