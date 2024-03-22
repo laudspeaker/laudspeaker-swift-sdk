@@ -942,12 +942,18 @@ public class LaudspeakerCore {
         throw error
     }
     
+    func crashWithStackOverflow() {
+        crashWithStackOverflow()
+    }
+    
     public func testSentryIntegration() {
         //let a = SentrySDK.capture(message: "Test error for Sentry integration")
         print("adfasf")
         //print(a)
         print("adfasf")
-        throwError()
+        //throwError()
+        crashWithStackOverflow()
+
         /*
         do {
                 // Attempt to run a function that may throw an error
