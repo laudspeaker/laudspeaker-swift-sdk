@@ -942,7 +942,7 @@ public class LaudspeakerCore {
         print("adfasf")
         print(a)
         print("adfasf")
-        fatalError("Sentry integration test crash")
+        //fatalError("Sentry integration test crash")
         SentrySDK.capture(message: "Test error 2 for Sentry integration")
     }
     
