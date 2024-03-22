@@ -167,7 +167,7 @@ public class LaudspeakerCore {
         }
         */
         if(sessionManager == nil){
-            SentrySDK.capture(message: "sessionManger nil on init")
+            SentrySDK.capture(message: "sessionManger nil on getAnonymousId")
         }
         return sessionManager!.getAnonymousId() //?? ""
     }
