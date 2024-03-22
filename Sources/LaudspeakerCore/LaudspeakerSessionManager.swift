@@ -21,11 +21,11 @@ class LaudspeakerSessionManager {
 
             if anonymousId == nil || anonymousId == "" {
                 anonymousId = UUID().uuidString
-                setAnonId(anonymousId ?? "")
+                setAnonId(anonymousId ?? "anon sessionManger not setting")
             }
         }
 
-        return anonymousId ?? ""
+        return anonymousId ?? "getAnonymouseId not finding SessionManager"
     }
 
     public func setAnonymousId(_ id: String) {
@@ -43,7 +43,7 @@ class LaudspeakerSessionManager {
         distinctLock.withLock {
             distinctId = storage.getString(forKey: .distinctId) ?? getAnonymousId()
         }
-        return distinctId ?? ""
+        return distinctId ?? "getDistincId not finding Manger"
     }
 
     public func setDistinctId(_ id: String) {

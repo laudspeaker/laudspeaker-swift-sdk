@@ -97,7 +97,7 @@ public class LaudspeakerCore {
     }
     
     public func getCustomerId() -> String {
-        return self.storage.getItem(forKey: "customerId") ?? ""
+        return self.storage.getItem(forKey: "customerId") ?? "getCustomerId not finding"
     }
     
     private static func trimmedURL(from urlString: String) -> String? {
@@ -156,7 +156,7 @@ public class LaudspeakerCore {
             return ""
         }
          */
-        return sessionManager?.getDistinctId() ?? ""
+        return sessionManager?.getDistinctId() ?? "getDistingId Laudspeaker Core not finding"
     }
 
     @objc public func getAnonymousId() -> String {
