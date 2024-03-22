@@ -354,6 +354,8 @@ public class LaudspeakerCore {
             // ignored
         }
         
+        PackageInitializer.setup()
+        
         print("init queue")
         queue = LaudspeakerQueue(self.config, theStorage, theApi, reachability)
         
@@ -933,5 +935,9 @@ public class LaudspeakerCore {
             }
     }
     */
+    
+    public func testSentryIntegration() {
+        fatalError("Sentry integration test crash")
+    }
     
 }

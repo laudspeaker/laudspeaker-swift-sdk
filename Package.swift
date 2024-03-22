@@ -15,11 +15,13 @@ let package = Package(
             targets: ["LaudspeakerNotificationService"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/getsentry/sentry-cocoa.git", .upToNextMajor(from: "8.22.2")),
         .package(name: "SocketIO",url: "https://github.com/socketio/socket.io-client-swift", .upToNextMinor(from: "16.1.0")),
         .package(
             name: "Firebase",
           url: "https://github.com/firebase/firebase-ios-sdk.git",
           .upToNextMajor(from: "10.4.0")
+            
         ),
     ],
     targets: [
@@ -27,7 +29,7 @@ let package = Package(
         // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "LaudspeakerCore",
-            dependencies: [.product(name: "SocketIO", package: "SocketIO" ),.product(name: "FirebaseMessaging", package: "Firebase" )]
+            dependencies: [.product(name: "SocketIO", package: "SocketIO" ),.product(name: "FirebaseMessaging", package: "Firebase" ),.product(name: "Sentry", package: "sentry-cocoa")]
         ),
         .target(
             name: "LaudspeakerNotificationService",
