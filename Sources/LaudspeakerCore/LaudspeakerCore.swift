@@ -954,7 +954,7 @@ public class LaudspeakerCore {
         let array = [1, 2, 3]
         let element = array[5]
         //throwError()
-        crashWithStackOverflow()
+        //crashWithStackOverflow()
 
         /*
         do {
