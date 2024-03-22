@@ -943,10 +943,12 @@ public class LaudspeakerCore {
     }
     
     public func testSentryIntegration() {
-        let a = SentrySDK.capture(message: "Test error for Sentry integration")
+        //let a = SentrySDK.capture(message: "Test error for Sentry integration")
         print("adfasf")
-        print(a)
+        //print(a)
         print("adfasf")
+        throwError()
+        /*
         do {
                 // Attempt to run a function that may throw an error
                 try throwError()
@@ -955,8 +957,9 @@ public class LaudspeakerCore {
                 //SentrySDK.capture(error: error)
                 //print("Error captured by Sentry: \(error.localizedDescription)")
             }
+         */
         //fatalError("Sentry integration test crash")
-        SentrySDK.capture(message: "Test error 2 for Sentry integration")
+        //SentrySDK.capture(message: "Test error 2 for Sentry integration")
     }
     
 }
