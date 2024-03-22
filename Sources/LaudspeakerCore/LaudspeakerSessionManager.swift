@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Sentry
 
 class LaudspeakerSessionManager {
     private let storage: LaudspeakerNewStorage!
@@ -20,7 +21,10 @@ class LaudspeakerSessionManager {
             anonymousId = storage.getString(forKey: .anonymousId)
 
             if anonymousId == nil || anonymousId == "" {
+                SentrySDK.capture(message: "anonymousId nil or empty in getAnonymousI")
                 anonymousId = UUID().uuidString
+                SentrySDK.capture(message: anonymousId ?? "tried to set a new uuid")
+                
                 setAnonId(anonymousId ?? "anon sessionManger not setting")
             }
         }
@@ -29,12 +33,15 @@ class LaudspeakerSessionManager {
     }
 
     public func setAnonymousId(_ id: String) {
+        SentrySDK.capture(message: "setting anonymouse id, setAnonymousId")
+        SentrySDK.capture(message: id)
         anonLock.withLock {
             setAnonId(id)
         }
     }
 
     private func setAnonId(_ id: String) {
+        SentrySDK.capture(message: "setting anonID, setAnonId")
         storage.setString(forKey: .anonymousId, contents: id)
     }
 
@@ -42,6 +49,9 @@ class LaudspeakerSessionManager {
         var distinctId: String?
         distinctLock.withLock {
             distinctId = storage.getString(forKey: .distinctId) ?? getAnonymousId()
+        }
+        if(distinctId == nil){
+            SentrySDK.capture(message: "distinctId nil or empty in getDistinctId")
         }
         return distinctId ?? "getDistincId not finding Manger"
     }

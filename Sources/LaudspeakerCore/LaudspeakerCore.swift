@@ -166,6 +166,9 @@ public class LaudspeakerCore {
             return ""
         }
         */
+        if(sessionManager == nil){
+            SentrySDK.capture(message: "sessionManger nil on init")
+        }
         return sessionManager!.getAnonymousId() //?? ""
     }
     
@@ -345,6 +348,9 @@ public class LaudspeakerCore {
         print(self.config.apiKey)
         print(self.config.host)
         sessionManager = LaudspeakerSessionManager(self.config)
+        if(sessionManager == nil){
+            SentrySDK.capture(message: "sessionManger nil on init")
+        }
         let theStorage = LaudspeakerNewStorage(self.config)
         newStorage = theStorage;
         let theApi = LaudspeakerApi(self.config)
@@ -618,6 +624,10 @@ public class LaudspeakerCore {
                                         groupProperties: sanitizeDicionary(groupProperties))
         )
         
+        if(eventToSend.distinctId == nil){
+            SentrySDK.capture(message: "fire distinctId getAnonymousId nil")
+        }
+        
         print("this is event")
         
         print(eventToSend)
@@ -726,7 +736,7 @@ public class LaudspeakerCore {
         guard let queue = queue, let sessionManager = sessionManager else {
             return
         }
-        let oldDistinctId = getDistinctId()
+        //let oldDistinctId = getDistinctId()
         
         self.storage.setItem(fcmToken ?? "", forKey: "fcmToken")
 
