@@ -9,7 +9,7 @@ import UserNotifications
 import CryptoKit
 import CommonCrypto
 import Starscream
-import SocketIO
+//import SocketIO
 import Sentry
 
 let retryDelay = 5.0
@@ -593,6 +593,7 @@ public class LaudspeakerCore {
     {
         
         print("in fireH")
+        SentrySDK.capture(message: "in fire")
 
         guard let queue = queue else {
             return
@@ -633,6 +634,7 @@ public class LaudspeakerCore {
         print(eventToSend)
         
         print("adding to queu")
+        SentrySDK.capture(message: "fire - adding to queue")
     
 
         queue.add(eventToSend)
@@ -751,6 +753,7 @@ public class LaudspeakerCore {
         
     }
     
+    /*
     public func fireS(event: String, payload: [String: Any]? = nil) {
         // Initialize payload string
         let customerId = self.getCustomerId()
@@ -802,6 +805,7 @@ public class LaudspeakerCore {
         task.resume()
 
     }
+    */
     
     /*
     public func fireOld(event: String, payload: [String: Any]? = nil) {
@@ -952,10 +956,12 @@ public class LaudspeakerCore {
         throw error
     }
     
+    /*
     func crashWithStackOverflow() {
         crashWithStackOverflow()
     }
-    
+    */
+     
     public func testSentryIntegration() {
         //let a = SentrySDK.capture(message: "Test error for Sentry integration")
         print("adfasf")

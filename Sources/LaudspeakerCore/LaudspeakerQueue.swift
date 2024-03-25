@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Sentry
 
 class LaudspeakerQueue {
     let retryDelay = 5.0
@@ -196,6 +197,7 @@ class LaudspeakerQueue {
             data = try JSONSerialization.data(withJSONObject: event.toJSON())
         } catch {
             print("Tried to queue unserialisable LaudspeakerEvent \(error)")
+            SentrySDK.capture(message: error.localizedDescription)
             return
         }
         
@@ -228,6 +230,8 @@ class LaudspeakerQueue {
                 // each element is a LaudspeakerEvent if fromJSON succeeds
                 guard let event = LaudspeakerEvent.fromJSON(item) else {
                     print("Failed to deserialize item: \(item)")
+                    SentrySDK.capture(message: "Failed to deserialize item:")
+                    //SentrySDK.capture(message: item)
                     continue
                 }
                 print("Deserialized event: \(event)")
