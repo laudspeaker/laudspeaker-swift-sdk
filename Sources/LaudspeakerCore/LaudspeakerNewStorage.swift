@@ -18,6 +18,7 @@ class LaudspeakerNewStorage {
         case groups = "laudspeaker.groups"
         case registerProperties = "laudspeaker.registerProperties"
         case optOut = "laudspeaker.optOut"
+        case fcmToken = "laudspeaker.fcmToken"
     }
 
     private let config: LaudspeakerConfig

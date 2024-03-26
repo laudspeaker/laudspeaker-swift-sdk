@@ -741,6 +741,7 @@ public class LaudspeakerCore {
         //let oldDistinctId = getDistinctId()
         
         self.storage.setItem(fcmToken ?? "", forKey: "fcmToken")
+        self.newStorage?.setString(forKey: .fcmToken, contents: fcmToken ?? "fcm_token_error")
 
         queue.add(LaudspeakerEvent(
             event: "$fcm",
@@ -984,6 +985,87 @@ public class LaudspeakerCore {
          */
         //fatalError("Sentry integration test crash")
         //SentrySDK.capture(message: "Test error 2 for Sentry integration")
+    }
+    
+    func convertTimeToUTC(localTime: String, utcOffsetMinutes: Int) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: utcOffsetMinutes * 60)
+        
+        guard let time = dateFormatter.date(from: localTime) else {
+            return ""
+        }
+        
+        dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
+        return dateFormatter.string(from: time)
+    }
+    
+    func isWithinInterval(startTime: String, endTime: String, currentTime: String) -> Bool {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm"
+        
+        guard let start = dateFormatter.date(from: startTime),
+              let end = dateFormatter.date(from: endTime),
+              let current = dateFormatter.date(from: currentTime) else {
+            return false
+        }
+        
+        if start <= end {
+            return current >= start && current <= end
+        } else { // Handles the over-midnight case
+            return current >= start || current <= end
+        }
+    }
+    
+    struct QuietHours {
+        var start: String
+        var end: String
+        var timeZone: Int // Assuming this is an offset in minutes from UTC
+    }
+    
+    public func handleData(data: [String: Any])
+    {
+        guard let quietHoursData = data["quietHours"] as? [String: Any],
+                  let start = quietHoursData["start"] as? String,
+                  let end = quietHoursData["end"] as? String,
+                  let timeZone = quietHoursData["timeZone"] as? Int else {
+                print("Error: Quiet hours data is missing or incorrect")
+                return
+            }
+
+            let quietHours = QuietHours(start: start, end: end, timeZone: timeZone)
+
+            let utcStartTime = convertTimeToUTC(localTime: quietHours.start, utcOffsetMinutes: quietHours.timeZone)
+            let utcEndTime = convertTimeToUTC(localTime: quietHours.end, utcOffsetMinutes: quietHours.timeZone)
+
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "HH:mm"
+            dateFormatter.timeZone = TimeZone(abbreviation: "UTC")
+            let utcNowString = dateFormatter.string(from: Date())
+
+            let isQuietHour = isWithinInterval(startTime: utcStartTime, endTime: utcEndTime, currentTime: utcNowString)
+            
+            // Here you can take action based on whether it is quiet hours or not
+            if isQuietHour {
+                print("It's quiet hours.")
+            } else {
+                print("It's not quiet hours.")
+            }
+        /*
+        if !isEnabled() {
+            return
+        }
+
+        if isOptOutState() {
+            return
+        }
+        */
+        
+        //let oldDistinctId = getDistinctId()
+        
+        //self.storage.setItem(fcmToken ?? "", forKey: "fcmToken")
+
+        
     }
     
 }
