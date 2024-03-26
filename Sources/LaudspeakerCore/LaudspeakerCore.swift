@@ -1023,14 +1023,15 @@ public class LaudspeakerCore {
         var timeZone: Int // Assuming this is an offset in minutes from UTC
     }
     
-    public func handleData(data: [String: Any])
+    public func handleData(data: [String: Any]) -> Bool
     {
         guard let quietHoursData = data["quietHours"] as? [String: Any],
                   let start = quietHoursData["start"] as? String,
                   let end = quietHoursData["end"] as? String,
                   let timeZone = quietHoursData["timeZone"] as? Int else {
                 print("Error: Quiet hours data is missing or incorrect")
-                return
+            //decide this later
+            return true;
             }
 
             let quietHours = QuietHours(start: start, end: end, timeZone: timeZone)
@@ -1048,8 +1049,10 @@ public class LaudspeakerCore {
             // Here you can take action based on whether it is quiet hours or not
             if isQuietHour {
                 print("It's quiet hours.")
+                return true;
             } else {
                 print("It's not quiet hours.")
+                return false;
             }
         /*
         if !isEnabled() {
