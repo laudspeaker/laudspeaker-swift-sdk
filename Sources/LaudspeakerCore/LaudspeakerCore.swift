@@ -8,7 +8,7 @@ import FirebaseMessaging
 import UserNotifications
 import CryptoKit
 import CommonCrypto
-import Starscream
+//import Starscream
 //import SocketIO
 import Sentry
 
