@@ -11,6 +11,7 @@ public class LaudspeakerEvent {
     public var properties: [String: Any]
     public var timestamp: Date
     public var uuid: UUID
+    public var fcmToken: String
 
     enum Key: String {
         case event
@@ -18,14 +19,16 @@ public class LaudspeakerEvent {
         case properties
         case timestamp
         case uuid
+        case fcmToken
     }
 
-    init(event: String, distinctId: String, properties: [String: Any]? = nil, timestamp: Date = Date(), uuid: UUID = .init()) {
+    init(event: String, distinctId: String, properties: [String: Any]? = nil, timestamp: Date = Date(), fcmToken: String, uuid: UUID = .init()) {
         self.event = event
         self.distinctId = distinctId
         self.properties = properties ?? [:]
         self.timestamp = timestamp
         self.uuid = uuid
+        self.fcmToken = fcmToken
     }
 
     // NOTE: Ideally we would use the NSCoding behaviour but it gets needlessly complex
@@ -57,6 +60,7 @@ public class LaudspeakerEvent {
               let timestampString = info["timestamp"] as? String,
               let timestamp = toISO8601Date(timestampString),
               let uuidString = info["uuid"] as? String,
+              let fcmToken = info["uuid"] as? String,
               let uuid = UUID(uuidString: uuidString) else {
             return nil
         }
@@ -66,6 +70,7 @@ public class LaudspeakerEvent {
             distinctId: distinctId,
             properties: payload, // Assuming properties are contained within "payload"
             timestamp: timestamp,
+            fcmToken: fcmToken,
             uuid: uuid
         )
     }
@@ -84,17 +89,20 @@ public class LaudspeakerEvent {
         if setProps != nil {
             properties["$set"] = setProps
         }
-
+        
         guard let distinctId = (json["distinct_id"] as? String) ?? (properties["distinct_id"] as? String) else { return nil }
-
+        
+        let fcmToken = json["fcmToken"] as? String ?? ""
+        
         let uuid = ((json["uuid"] as? String) ?? (json["message_id"] as? String)) ?? UUID().uuidString
         let uuidObj = UUID(uuidString: uuid) ?? UUID()
-
+        
         return LaudspeakerEvent(
             event: event,
             distinctId: distinctId,
             properties: properties,
             timestamp: timestampDate,
+            fcmToken: fcmToken,
             uuid: uuidObj
         )
     }
@@ -107,6 +115,7 @@ public class LaudspeakerEvent {
             "event": event,
             "payload": properties,
             "timestamp": toISO8601String(timestamp),
+            "fcmToken": fcmToken,
             "uuid": uuid.uuidString,
         ]
     }

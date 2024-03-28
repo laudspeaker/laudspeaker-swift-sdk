@@ -61,6 +61,23 @@ class LaudspeakerSessionManager {
             storage.setString(forKey: .distinctId, contents: id)
         }
     }
+    
+    public func getFcmToken() -> String {
+        var fcmToken: String?
+        distinctLock.withLock {
+            fcmToken = storage.getString(forKey: .fcmToken) ?? ""
+        }
+        if(fcmToken == nil){
+            SentrySDK.capture(message: "fcmToken nil or empty in getfcmToken")
+        }
+        return fcmToken ?? "get fcmToken not finding Manger"
+    }
+    
+    public func setFcmToken(_ fcmToken: String) {
+        distinctLock.withLock {
+            storage.setString(forKey: .fcmToken, contents: fcmToken)
+        }
+    }
 
     public func reset() {
         distinctLock.withLock {

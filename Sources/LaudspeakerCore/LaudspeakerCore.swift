@@ -172,6 +172,18 @@ public class LaudspeakerCore {
         return sessionManager!.getAnonymousId() //?? ""
     }
     
+    @objc public func getFcmToken() -> String {
+        /*
+        if !isEnabled() {
+            return ""
+        }
+        */
+        if(sessionManager == nil){
+            SentrySDK.capture(message: "sessionManger nil on getAnonymousId")
+        }
+        return sessionManager!.getFcmToken() //?? ""
+    }
+    
     private func rotateSessionIdIfRequired() {
         guard sessionId != nil, let sessionLastTimestamp = sessionLastTimestamp else {
             rotateSession()
@@ -622,7 +634,8 @@ public class LaudspeakerCore {
             properties: buildProperties(properties: sanitizeDicionary(payload),
                                         userProperties: sanitizeDicionary(userProperties),
                                         userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce),
-                                        groupProperties: sanitizeDicionary(groupProperties))
+                                        groupProperties: sanitizeDicionary(groupProperties)),
+            fcmToken: getFcmToken()
         )
         
         if(eventToSend.distinctId == nil){
@@ -682,7 +695,8 @@ public class LaudspeakerCore {
         queue.add(LaudspeakerEvent(
             event: "$identify",
             distinctId: getAnonymousId(),
-            properties: buildProperties(properties: properties,  userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+            properties: buildProperties(properties: properties,  userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce)),
+            fcmToken: getFcmToken()
         ))
 
         if distinctId != oldDistinctId {
@@ -716,7 +730,8 @@ public class LaudspeakerCore {
         queue.add(LaudspeakerEvent(
             event: "$set",
             distinctId: getAnonymousId(),
-            properties: buildProperties(properties: sanitizeDicionary(properties), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+            properties: buildProperties(properties: sanitizeDicionary(properties), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce)),
+            fcmToken: getFcmToken()
         ))
         
     }
@@ -748,7 +763,8 @@ public class LaudspeakerCore {
             distinctId: getAnonymousId(),
             properties: buildProperties(properties: [
                 "iosDeviceToken": fcmToken ?? "",
-            ], userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce))
+            ], userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce)),
+            fcmToken: getFcmToken()
         ))
 
         
