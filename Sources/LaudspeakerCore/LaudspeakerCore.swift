@@ -1081,10 +1081,51 @@ public class LaudspeakerCore {
         */
         
         //let oldDistinctId = getDistinctId()
-        
         //self.storage.setItem(fcmToken ?? "", forKey: "fcmToken")
 
         
     }
     
+    public func logMessageEvent( event: String, properties: [String: Any]? = nil, userProperties: [String: Any]? = nil, userPropertiesSetOnce: [String: Any]? = nil)
+    {
+        print("in fireH")
+        SentrySDK.capture(message: "in fire")
+
+        guard let queue = queue else {
+            return
+        }
+
+        // If events fire in the background after the threshold, they should no longer have a sessionId
+        /*
+        if isInBackground,
+           sessionId != nil,
+           let sessionLastTimestamp = sessionLastTimestamp,
+           now().timeIntervalSince1970 - sessionLastTimestamp > sessionChangeThreshold
+        {
+            sessionLock.withLock {
+                sessionId = nil
+            }
+        }
+        */
+        print("this is firing url")
+        print(api?.config.host);
+        
+        let eventToSend = LaudspeakerEvent(
+            event: event,
+            distinctId: getAnonymousId(),
+            properties: buildProperties(properties: sanitizeDicionary(properties), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce)
+            ),
+            fcmToken: getFcmToken()
+            )
+        
+        if(eventToSend.distinctId == nil){
+            SentrySDK.capture(message: "fire distinctId getAnonymousId nil")
+        }
+            
+        print("this is event")
+        print(eventToSend)
+        print("adding to queu")
+        SentrySDK.capture(message: "fire - adding to queue")
+        queue.add(eventToSend)
+    }
 }

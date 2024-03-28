@@ -30,9 +30,6 @@ public class LaudspeakerEvent {
         self.uuid = uuid
         self.fcmToken = fcmToken
     }
-
-    // NOTE: Ideally we would use the NSCoding behaviour but it gets needlessly complex
-    // given we only need this for sending to the API
     
     /*
     static func fromJSON(_ data: Data) -> LaudspeakerEvent? {
