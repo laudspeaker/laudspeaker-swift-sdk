@@ -635,7 +635,7 @@ public class LaudspeakerCore {
                                         userProperties: sanitizeDicionary(userProperties),
                                         userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce),
                                         groupProperties: sanitizeDicionary(groupProperties)),
-            fcmToken: getFcmToken()
+            fcm:[ "iosDeviceToken" :getFcmToken()]
         )
         
         if(eventToSend.distinctId == nil){
@@ -696,7 +696,8 @@ public class LaudspeakerCore {
             event: "$identify",
             distinctId: getAnonymousId(),
             properties: buildProperties(properties: properties,  userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce)),
-            fcmToken: getFcmToken()
+            fcm:[ "iosDeviceToken" :getFcmToken()]
+            //fcmToken: getFcmToken()
         ))
 
         if distinctId != oldDistinctId {
@@ -731,7 +732,7 @@ public class LaudspeakerCore {
             event: "$set",
             distinctId: getAnonymousId(),
             properties: buildProperties(properties: sanitizeDicionary(properties), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce)),
-            fcmToken: getFcmToken()
+            fcm:[ "iosDeviceToken" :getFcmToken()]
         ))
         
     }
@@ -764,7 +765,7 @@ public class LaudspeakerCore {
             properties: buildProperties(properties: [
                 "iosDeviceToken": fcmToken ?? "",
             ], userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce)),
-            fcmToken: getFcmToken()
+            fcm:[ "iosDeviceToken" :getFcmToken()]
         ))
 
         
@@ -1115,7 +1116,7 @@ public class LaudspeakerCore {
             distinctId: getAnonymousId(),
             properties: buildProperties(properties: sanitizeDicionary(properties), userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce)
             ),
-            fcmToken: getFcmToken()
+            fcm:[ "iosDeviceToken" :getFcmToken()]
             )
         
         if(eventToSend.distinctId == nil){
