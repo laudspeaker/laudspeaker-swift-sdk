@@ -60,7 +60,7 @@ public class LaudspeakerEvent {
               let timestampString = info["timestamp"] as? String,
               let timestamp = toISO8601Date(timestampString),
               let uuidString = info["uuid"] as? String,
-              let fcmToken = info["uuid"] as? String,
+              let fcmToken = info["fcmToken"] as? String,
               let uuid = UUID(uuidString: uuidString) else {
             return nil
         }

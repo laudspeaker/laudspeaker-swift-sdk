@@ -756,7 +756,7 @@ public class LaudspeakerCore {
         //let oldDistinctId = getDistinctId()
         
         self.storage.setItem(fcmToken ?? "", forKey: "fcmToken")
-        self.newStorage?.setString(forKey: .fcmToken, contents: fcmToken ?? "fcm_token_error")
+        self.newStorage?.setString(forKey: .fcmToken, contents: fcmToken ?? "fcm_set_token_error")
 
         queue.add(LaudspeakerEvent(
             event: "$fcm",
