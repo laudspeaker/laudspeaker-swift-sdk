@@ -11,7 +11,7 @@ public class LaudspeakerEvent {
     public var properties: [String: Any]
     public var timestamp: Date
     public var uuid: UUID
-    public var fcmToken: String
+    public var fcm: [String: String]
 
     enum Key: String {
         case event
@@ -19,16 +19,16 @@ public class LaudspeakerEvent {
         case properties
         case timestamp
         case uuid
-        case fcmToken
+        case fcm = "$fcm"
     }
 
-    init(event: String, distinctId: String, properties: [String: Any]? = nil, timestamp: Date = Date(), fcmToken: String, uuid: UUID = .init()) {
+    init(event: String, distinctId: String, properties: [String: Any]? = nil, timestamp: Date = Date(), fcm: [String: String], uuid: UUID = .init()) {
         self.event = event
         self.distinctId = distinctId
         self.properties = properties ?? [:]
         self.timestamp = timestamp
         self.uuid = uuid
-        self.fcmToken = fcmToken
+        self.fcm = fcm
     }
     
     /*
@@ -57,7 +57,8 @@ public class LaudspeakerEvent {
               let timestampString = info["timestamp"] as? String,
               let timestamp = toISO8601Date(timestampString),
               let uuidString = info["uuid"] as? String,
-              let fcmToken = info["fcmToken"] as? String,
+              let fcmDict = info["$fcm"] as? [String: String], // Extracting $fcm as a dictionary
+              //let fcmToken = info["fcmToken"] as? String,
               let uuid = UUID(uuidString: uuidString) else {
             return nil
         }
@@ -67,7 +68,7 @@ public class LaudspeakerEvent {
             distinctId: distinctId,
             properties: payload, // Assuming properties are contained within "payload"
             timestamp: timestamp,
-            fcmToken: fcmToken,
+            fcm: fcmDict,
             uuid: uuid
         )
     }
@@ -89,7 +90,18 @@ public class LaudspeakerEvent {
         
         guard let distinctId = (json["distinct_id"] as? String) ?? (properties["distinct_id"] as? String) else { return nil }
         
-        let fcmToken = json["fcmToken"] as? String ?? ""
+        // Extracting the $fcm dictionary and then the iosDeviceToken
+        
+        // Directly extracting the $fcm dictionary
+        let fcm = json["$fcm"] as? [String: String] ?? [:]
+        /*
+        let fcmToken: String
+        if let fcmDict = json["$fcm"] as? [String: Any], let iosDeviceToken = fcmDict["iosDeviceToken"] as? String {
+            fcmToken = iosDeviceToken
+        } else {
+            fcmToken = "" // Provide a default or handle the absence of fcmToken accordingly
+        }
+        */
         
         let uuid = ((json["uuid"] as? String) ?? (json["message_id"] as? String)) ?? UUID().uuidString
         let uuidObj = UUID(uuidString: uuid) ?? UUID()
@@ -99,7 +111,7 @@ public class LaudspeakerEvent {
             distinctId: distinctId,
             properties: properties,
             timestamp: timestampDate,
-            fcmToken: fcmToken,
+            fcm: fcm,
             uuid: uuidObj
         )
     }
@@ -112,7 +124,7 @@ public class LaudspeakerEvent {
             "event": event,
             "payload": properties,
             "timestamp": toISO8601String(timestamp),
-            "fcmToken": fcmToken,
+            "$fcm": fcm,
             "uuid": uuid.uuidString,
         ]
     }
