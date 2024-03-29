@@ -1092,7 +1092,7 @@ public class LaudspeakerCore {
         print("in logMessageEvent")
         SentrySDK.capture(message: "in logMessageEvent")
         
-        if let stepId = userInfo["stepID"], let customerId = userInfo["customerID"], let workspaceId = userInfo["workspaceID"], let templateId = userInfo["templateID"] {
+        if let stepId = userInfo["stepID"], let customerId = userInfo["customerID"], let workspaceId = userInfo["workspaceID"], let templateId = userInfo["templateID"], let messageId = userInfo["messageID"] {
             print("this is the userInfo in didReceive")
             print(userInfo)
             print("userInfo stepID, customer, workspace, template exist")
@@ -1100,7 +1100,7 @@ public class LaudspeakerCore {
                 return
             }
             
-            let properties = ["stepId": stepId, "customerId": customerId, "workspaceId": workspaceId, "templateId": templateId];
+            let properties = ["stepId": stepId, "customerId": customerId, "workspaceId": workspaceId, "templateId": templateId, "messageId": messageId];
 
             // If events fire in the background after the threshold, they should no longer have a sessionId
             /*
