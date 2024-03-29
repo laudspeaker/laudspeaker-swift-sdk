@@ -1138,6 +1138,7 @@ public class LaudspeakerCore {
             
         } else {
             print("Required userInfo fields are missing")
+            print(userInfo)
             return;
         }
         
