@@ -334,7 +334,7 @@ public class LaudspeakerCore {
         }
     }
     
-    public init(storage: LaudspeakerStorage? = nil, url: String? = nil, apiKey: String? = nil, isPushAutomated: Bool? = nil) {
+    public init(storage: LaudspeakerStorage? = nil, url: String? = nil, apiKey: String? = nil, sentryDSN: String? = nil, isPushAutomated: Bool? = nil) {
         self.storage = storage ?? UserDefaultsStorage()
         self.apiKey = apiKey
         self.isPushAutomated = isPushAutomated ?? false
@@ -373,7 +373,9 @@ public class LaudspeakerCore {
             // ignored
         }
         
-        PackageInitializer.setup()
+        
+        PackageInitializer.setup(withDSN: sentryDSN)
+
         
         print("init queue")
         queue = LaudspeakerQueue(self.config, theStorage, theApi, reachability)
