@@ -986,6 +986,7 @@ public class LaudspeakerCore {
      
     public func testSentryIntegration() {
         //let a = SentrySDK.capture(message: "Test error for Sentry integration")
+        SentrySDK.capture(message: "Test error 2 for Sentry integration")
         print("adfasf")
         //print(a)
         print("adfasf")
