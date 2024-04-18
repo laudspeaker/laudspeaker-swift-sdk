@@ -605,7 +605,7 @@ public class LaudspeakerCore {
     {
         
         print("in fireH")
-        SentrySDK.capture(message: "in fire")
+        //SentrySDK.capture(message: "in fire")
 
         guard let queue = queue else {
             return
@@ -647,7 +647,7 @@ public class LaudspeakerCore {
         print(eventToSend)
         
         print("adding to queu")
-        SentrySDK.capture(message: "fire - adding to queue")
+        //SentrySDK.capture(message: "fire - adding to queue")
     
 
         queue.add(eventToSend)
@@ -751,6 +751,7 @@ public class LaudspeakerCore {
         }
         */
         
+        /*
         guard let queue = queue, let sessionManager = sessionManager else {
             return
         }
@@ -767,6 +768,7 @@ public class LaudspeakerCore {
             ], userProperties: sanitizeDicionary(userProperties), userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce)),
             fcm:[ "iosDeviceToken" :getFcmToken()]
         ))
+        */
 
         
     }
@@ -1090,7 +1092,7 @@ public class LaudspeakerCore {
     public func logMessageEvent( event: String, userInfo: [AnyHashable : Any])
     {
         print("in logMessageEvent")
-        SentrySDK.capture(message: "in logMessageEvent")
+        //SentrySDK.capture(message: "in logMessageEvent")
         
         if let stepId = userInfo["stepID"], let customerId = userInfo["customerID"], let workspaceId = userInfo["workspaceID"], let templateId = userInfo["templateID"], let messageId = userInfo["messageID"] {
             print("this is the userInfo in didReceive")
@@ -1132,7 +1134,7 @@ public class LaudspeakerCore {
             print("this is event")
             print(eventToSend)
             print("adding to queu")
-            SentrySDK.capture(message: "fire - adding to queue")
+            //SentrySDK.capture(message: "fire - adding to queue")
             queue.add(eventToSend)
             // Since all required fields exist, proceed to log the message event
             

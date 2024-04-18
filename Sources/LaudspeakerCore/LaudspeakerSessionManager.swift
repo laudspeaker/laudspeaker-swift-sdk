@@ -33,15 +33,15 @@ class LaudspeakerSessionManager {
     }
 
     public func setAnonymousId(_ id: String) {
-        SentrySDK.capture(message: "setting anonymouse id, setAnonymousId")
-        SentrySDK.capture(message: id)
+        //SentrySDK.capture(message: "setting anonymouse id, setAnonymousId")
+        //SentrySDK.capture(message: id)
         anonLock.withLock {
             setAnonId(id)
         }
     }
 
     private func setAnonId(_ id: String) {
-        SentrySDK.capture(message: "setting anonID, setAnonId")
+        //SentrySDK.capture(message: "setting anonID, setAnonId")
         storage.setString(forKey: .anonymousId, contents: id)
     }
 
