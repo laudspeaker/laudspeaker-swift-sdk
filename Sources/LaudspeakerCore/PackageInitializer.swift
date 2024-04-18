@@ -12,9 +12,9 @@ import Sentry
 public class PackageInitializer {
     static let shared = PackageInitializer()
     
-    private init() {
+    private init(dsn: String? = nil) {
         SentrySDK.start { options in
-            options.dsn = "https://15c7f142467b67973258e7cfaf814500@o4506038702964736.ingest.sentry.io/4506040630640640"
+            options.dsn = dsn ?? "https://15c7f142467b67973258e7cfaf814500@o4506038702964736.ingest.sentry.io/4506040630640640"
             options.debug = true // Consider turning off in production
             // Any additional Sentry configuration
             // Automatically record crashes and other issues
@@ -31,7 +31,7 @@ public class PackageInitializer {
         }
     }
     
-    public static func setup() {
-        _ = shared
-    }
+    public static func setup(withDSN dsn: String? = nil) {
+            _ = PackageInitializer(dsn: dsn)
+        }
 }
