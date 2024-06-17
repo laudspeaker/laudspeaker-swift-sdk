@@ -12,6 +12,7 @@ public class LaudspeakerEvent {
     public var timestamp: Date
     public var uuid: UUID
     public var fcm: [String: String]
+    public var source: String
 
     enum Key: String {
         case event
@@ -20,15 +21,17 @@ public class LaudspeakerEvent {
         case timestamp
         case uuid
         case fcm = "$fcm"
+        case source
     }
 
-    init(event: String, distinctId: String, properties: [String: Any]? = nil, timestamp: Date = Date(), fcm: [String: String], uuid: UUID = .init()) {
+    init(event: String, distinctId: String, properties: [String: Any]? = nil, timestamp: Date = Date(), fcm: [String: String], uuid: UUID = .init(), source: String = "mobile") {
         self.event = event
         self.distinctId = distinctId
         self.properties = properties ?? [:]
         self.timestamp = timestamp
         self.uuid = uuid
         self.fcm = fcm
+        self.source = source
     }
     
     /*
@@ -58,6 +61,7 @@ public class LaudspeakerEvent {
               let timestamp = toISO8601Date(timestampString),
               let uuidString = info["uuid"] as? String,
               let fcmDict = info["$fcm"] as? [String: String], // Extracting $fcm as a dictionary
+              let source = info["source"] as? String,
               //let fcmToken = info["fcmToken"] as? String,
               let uuid = UUID(uuidString: uuidString) else {
             return nil
@@ -69,7 +73,9 @@ public class LaudspeakerEvent {
             properties: payload, // Assuming properties are contained within "payload"
             timestamp: timestamp,
             fcm: fcmDict,
-            uuid: uuid
+            uuid: uuid,
+            source: source
+            
         )
     }
 
@@ -120,7 +126,7 @@ public class LaudspeakerEvent {
         [
             "correlationKey": "_id",
             "correlationValue": distinctId,
-            "source": "mobile",
+            "source": source,
             "event": event,
             "payload": properties,
             "timestamp": toISO8601String(timestamp),
