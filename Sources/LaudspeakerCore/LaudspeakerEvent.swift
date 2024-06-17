@@ -24,7 +24,7 @@ public class LaudspeakerEvent {
         case source
     }
 
-    init(event: String, distinctId: String, properties: [String: Any]? = nil, timestamp: Date = Date(), fcm: [String: String], uuid: UUID = .init(), source: String = "mobile") {
+    init(event: String, distinctId: String, properties: [String: Any]? = nil, timestamp: Date = Date(), fcm: [String: String], source: String = "mobile", uuid: UUID = .init()) {
         self.event = event
         self.distinctId = distinctId
         self.properties = properties ?? [:]
@@ -73,9 +73,8 @@ public class LaudspeakerEvent {
             properties: payload, // Assuming properties are contained within "payload"
             timestamp: timestamp,
             fcm: fcmDict,
-            uuid: uuid,
-            source: source
-            
+            source: source,
+            uuid: uuid
         )
     }
 
@@ -100,6 +99,8 @@ public class LaudspeakerEvent {
         
         // Directly extracting the $fcm dictionary
         let fcm = json["$fcm"] as? [String: String] ?? [:]
+        
+        let source = json["source"] as? String ?? ""
         /*
         let fcmToken: String
         if let fcmDict = json["$fcm"] as? [String: Any], let iosDeviceToken = fcmDict["iosDeviceToken"] as? String {
@@ -118,6 +119,7 @@ public class LaudspeakerEvent {
             properties: properties,
             timestamp: timestampDate,
             fcm: fcm,
+            source: source,
             uuid: uuidObj
         )
     }

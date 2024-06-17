@@ -434,108 +434,7 @@ public class LaudspeakerCore {
     }
     
     /*
-    private func addHandlers() {
-        socket?.on(clientEvent: .connect) { [weak self] data, ack in
-            print("LaudspeakerCore connected")
-            self?.isConnected = true
-            //self?.resendQueuedMessages()
-            //self?.reconnectAttempt = 0
-            //print("sent resendQueue")
-            self?.onConnect?()
-        }
-        
-        socket?.on("flush") { [weak self] data, ack in
-            print("flushing")
-            self?.resendQueuedMessages()
-            self?.reconnectAttempt = 0
-            print("sent resendQueue")
-        }
-        
-        socket?.on(clientEvent: .disconnect) { [weak self] data, ack in
-            print("LaudspeakerCore disconnected")
-            self?.isConnected = false
-            
-            self?.reconnectWithUpdatedParams()
 
-        }
-        
-        socket?.on(clientEvent: .error) { [weak self] data, ack in
-            print("LaudspeakerCore ERROR",data)
-            self?.isConnected = false
-            
-            //self?.reconnectWithUpdatedParams()
-
-        }
-        
-        socket?.on("customerId") { [weak self] data, ack in
-            print("LaudspeakerCore Got customerId")
-            
-            if let customerId = data[0] as? String {
-                print(customerId)
-                
-                self?.storage.setItem(customerId, forKey: "customerId")
-                
-                // Tried to see if there was a way to update the auth string via query
-                // Doesn't look like there is
-                //self?.socket?.manager?.socketURL.query(false).
-                
-                self?.authParams = [
-                    "apiKey": self?.apiKey ?? "",
-                    "customerId": customerId,
-                    "development": false
-                ]
-                
-                //self?.socket?.manager.
-                
-                if ((self?.isPushAutomated) == true) {
-                    self?.sendFCMToken()
-                }
-            }
-        }
-        
-        socket?.on("log") {data, ack in
-            print("LaudspeakerCore LOG")
-            print(data)
-        }
-        
-        print("added all handlers")
-    }
-    
-    
-    public func identifyOld(distinctId: String, optionalProperties: PropertyDict? = nil) {
-        // Ensure the socket is connected before attempting to write
-        /*
-        guard isConnected else {
-            print("Impossible to identify: no connection to API. Try to init connection first")
-            return
-        }
-        */
-        
-        var messageDict: PropertyDict = ["__PrimaryKey": distinctId]
-        if let optionalProps = optionalProperties {
-            messageDict["optionalProperties"] = optionalProps
-        }
-        
-        //socket?.emit("identify", messageDict)
-        emitMessage(channel: "identify", payload: messageDict)
-    }
-    
-    public func setOld(properties: PropertyDict) {
-        // Ensure the socket is connected before attempting to write
-        /*
-        guard isConnected else {
-            print("Impossible to identify: no connection to API. Try to init connection first")
-            return
-        }
-        */
-         
-        var messageDict: PropertyDict = [:]
-        messageDict["optionalProperties"] = properties
-        socket?.emit("set", messageDict)
-        emitMessage(channel: "set", payload: messageDict)
-        
-    }
-    
     public func sendFCMTokenOld(fcmToken: String? = nil) {
         /*
         guard isConnected else {
@@ -606,7 +505,7 @@ public class LaudspeakerCore {
                         groupProperties: [String: Any]? = nil)
     {
         
-        print("in fireH")
+        //print("in fireH")
         //SentrySDK.capture(message: "in fire")
 
         guard let queue = queue else {
@@ -626,7 +525,7 @@ public class LaudspeakerCore {
         }
         */
         
-        print("this is firing url")
+        //print("this is firing url")
         
         print(api?.config.host);
         
@@ -1119,7 +1018,7 @@ public class LaudspeakerCore {
                 }
             }
             */
-            print("this is firing url")
+            //print("this is firing url")
             print(api?.config.host);
             
             let eventToSend = LaudspeakerEvent(
@@ -1127,16 +1026,17 @@ public class LaudspeakerCore {
                 distinctId: getAnonymousId(),
                 properties: buildProperties(properties: sanitizeDicionary(properties), userProperties: nil, userPropertiesSetOnce: nil
                 ),
-                fcm:[ "iosDeviceToken" :getFcmToken()]
+                fcm:[ "iosDeviceToken" :getFcmToken()],
+                source: "message"
                 )
             
             if(eventToSend.distinctId == nil){
                 SentrySDK.capture(message: "fire distinctId getAnonymousId nil")
             }
                 
-            print("this is event")
+            //print("this is event")
             print(eventToSend)
-            print("adding to queu")
+            //print("adding to queu")
             //SentrySDK.capture(message: "fire - adding to queue")
             queue.add(eventToSend)
             // Since all required fields exist, proceed to log the message event
