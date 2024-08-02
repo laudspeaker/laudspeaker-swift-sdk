@@ -395,6 +395,7 @@ public class LaudspeakerCore {
         api = theApi;
         do {
             reachability = try Reachability()
+            context = LaudspeakerContext(reachability)
         } catch {
             // ignored
         }
