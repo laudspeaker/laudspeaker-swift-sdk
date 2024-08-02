@@ -308,6 +308,11 @@ public class LaudspeakerCore {
         */
         
         props = props.merging(properties ?? [:]) { current, _ in current }
+        
+        print("Final properties:")
+            for (key, value) in props {
+                print("\(key): \(value)")
+            }
 
         return props
     }
