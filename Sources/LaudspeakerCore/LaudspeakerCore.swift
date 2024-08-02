@@ -73,6 +73,7 @@ public class LaudspeakerCore {
     private var isPushAutomated: Bool = false
     public var isConnected: Bool = false
     private var endpointUrl: String?
+    private var context: LaudspeakerContext?
     
     var authParams: [String: Any] = [
         "apiKey": "",
@@ -269,9 +270,10 @@ public class LaudspeakerCore {
     {
         var props: [String: Any] = [:]
 
-        //let staticCtx = context?.staticContext()
-        //let dynamicCtx = context?.dynamicContext()
-        let localDynamicCtx = dynamicContext()
+        let staticCtx = context?.staticContext()
+        let dynamicCtx = context?.dynamicContext()
+        //let staticCtx = staticContext()
+        //let localDynamicCtx = dynamicContext()
         
         /*
         if staticCtx != nil {
@@ -281,7 +283,14 @@ public class LaudspeakerCore {
             props = props.merging(dynamicCtx ?? [:]) { current, _ in current }
         }
         */
-        props = props.merging(localDynamicCtx) { current, _ in current }
+        if let staticCtx = staticCtx {
+                props = props.merging(staticCtx) { current, _ in current }
+        }
+            
+        if let dynamicCtx = dynamicCtx {
+                props = props.merging(dynamicCtx) { current, _ in current }
+        }
+        
         if userProperties != nil {
             props["$set"] = (userProperties ?? [:])
         }
