@@ -288,7 +288,7 @@ public class LaudspeakerCore {
         
         props = props.merging(properties ?? [:]) { current, _ in current }
         
-        print("Final properties:")
+        print("Final build properties:")
             for (key, value) in props {
                 print("\(key): \(value)")
             }
@@ -325,7 +325,7 @@ public class LaudspeakerCore {
         
         //props = props.merging(properties ?? [:]) { current, _ in current }
         
-        print("Final properties:")
+        print("Final context properties:")
             for (key, value) in props {
                 print("\(key): \(value)")
             }
