@@ -9,25 +9,30 @@ public class LaudspeakerEvent {
     public var event: String
     public var distinctId: String
     public var properties: [String: Any]
+    public var context: [String: Any]
     public var timestamp: Date
     public var uuid: UUID
     public var fcm: [String: String]
     public var source: String
 
+
     enum Key: String {
         case event
         case distinctId
         case properties
+        case context
         case timestamp
         case uuid
         case fcm = "$fcm"
         case source
+        
     }
 
-    init(event: String, distinctId: String, properties: [String: Any]? = nil, timestamp: Date = Date(), fcm: [String: String], source: String = "mobile", uuid: UUID = .init()) {
+    init(event: String, distinctId: String, properties: [String: Any]? = nil, context: [String: Any]? = nil, timestamp: Date = Date(), fcm: [String: String], source: String = "mobile", uuid: UUID = .init()) {
         self.event = event
         self.distinctId = distinctId
         self.properties = properties ?? [:]
+        self.context = properties ?? [:]
         self.timestamp = timestamp
         self.uuid = uuid
         self.fcm = fcm
@@ -66,11 +71,14 @@ public class LaudspeakerEvent {
               let uuid = UUID(uuidString: uuidString) else {
             return nil
         }
+        
+        let context = info["context"] as? [String: Any] ?? [:]
 
         return LaudspeakerEvent(
             event: event,
             distinctId: distinctId,
             properties: payload, // Assuming properties are contained within "payload"
+            context: context,
             timestamp: timestamp,
             fcm: fcmDict,
             source: source,
@@ -113,10 +121,14 @@ public class LaudspeakerEvent {
         let uuid = ((json["uuid"] as? String) ?? (json["message_id"] as? String)) ?? UUID().uuidString
         let uuidObj = UUID(uuidString: uuid) ?? UUID()
         
+        let context = json["context"] as? [String: Any] ?? [:] // Extract context
+
+        
         return LaudspeakerEvent(
             event: event,
             distinctId: distinctId,
             properties: properties,
+            context: context,
             timestamp: timestampDate,
             fcm: fcm,
             source: source,
@@ -131,6 +143,7 @@ public class LaudspeakerEvent {
             "source": source,
             "event": event,
             "payload": properties,
+            "context": context,
             "timestamp": toISO8601String(timestamp),
             "$fcm": fcm,
             "uuid": uuid.uuidString,

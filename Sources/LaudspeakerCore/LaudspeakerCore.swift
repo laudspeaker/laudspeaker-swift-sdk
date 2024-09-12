@@ -328,6 +328,45 @@ public class LaudspeakerCore {
 
         return props
     }
+    
+    private func buildContext(properties: [String: Any]? = nil) -> [String: Any]
+    {
+        var props: [String: Any] = [:]
+
+        let staticCtx = context?.staticContext()
+        let dynamicCtx = context?.dynamicContext()
+
+        if let staticCtx = staticCtx {
+            if let jsonData = try? JSONSerialization.data(withJSONObject: staticCtx, options: .prettyPrinted),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        print("staticCtx: \(jsonString)")
+                    } else {
+                        print("Failed to serialize staticCtx")
+                    }
+                props = props.merging(staticCtx) { current, _ in current }
+        }
+            
+        if let dynamicCtx = dynamicCtx {
+            if let jsonData = try? JSONSerialization.data(withJSONObject: dynamicCtx, options: .prettyPrinted),
+                       let jsonString = String(data: jsonData, encoding: .utf8) {
+                        print("dynamicCtx: \(jsonString)")
+                    } else {
+                        print("Failed to serialize dynamicCtx")
+                    }
+                props = props.merging(dynamicCtx) { current, _ in current }
+        }
+        
+        
+        
+        props = props.merging(properties ?? [:]) { current, _ in current }
+        
+        print("Final properties:")
+            for (key, value) in props {
+                print("\(key): \(value)")
+            }
+
+        return props
+    }
 
     @objc public func flush() {
         /*
@@ -460,70 +499,6 @@ public class LaudspeakerCore {
         return paths[0]
     }
     
-    /*
-
-    public func sendFCMTokenOld(fcmToken: String? = nil) {
-        /*
-        guard isConnected else {
-            print("Impossible to send token: no connection to API. Try to init connection first")
-            return
-        }
-        */
-        
-        let tokenToSend: String
-        
-        if let token = fcmToken {
-            tokenToSend = token
-            
-            self.storage.setItem(tokenToSend, forKey: "fcmToken")
-            
-            let payload: [String: Any] = [
-                "type": "iOS",
-                "token": tokenToSend
-            ]
-            //self.socket?.emit("fcm_token", payload)
-            self.emitMessage(channel: "fcm_token", payload: payload)
-            
-        } else {
-            DispatchQueue.main.async {
-                let center = UNUserNotificationCenter.current()
-                center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-                    if let error = error {
-                        print("Error requesting notifications permissions: \(error)")
-                        return
-                    }
-                    guard granted else {
-                        print("Permissions not granted")
-                        return
-                    }
-                    
-                    Messaging.messaging().token { [weak self] token, error in
-                        if let error = error {
-                            print("Error fetching FCM token: \(error)")
-                            return
-                        }
-                        guard let token = token else {
-                            print("Token is nil")
-                            return
-                        }
-                        
-                        print("FCM token found: \(token)")
-                        self?.storage.setItem(token, forKey: "fcmToken")
-                        
-                        let payload: [String: Any] = [
-                            "type": "iOS",
-                            "token": token
-                        ]
-                        
-                        //self?.socket?.emit("fcm_token", payload)
-                        self?.emitMessage(channel: "fcm_token", payload: payload)
-                    }
-                }
-            }
-            return
-        }
-    }
-    */
     
     public func fire( event: String,
                         payload: [String: Any]? = nil,
@@ -531,9 +506,6 @@ public class LaudspeakerCore {
                         userPropertiesSetOnce: [String: Any]? = nil,
                         groupProperties: [String: Any]? = nil)
     {
-        
-        //print("in fireH")
-        //SentrySDK.capture(message: "in fire")
 
         guard let queue = queue else {
             return
@@ -563,6 +535,7 @@ public class LaudspeakerCore {
                                         userProperties: sanitizeDicionary(userProperties),
                                         userPropertiesSetOnce: sanitizeDicionary(userPropertiesSetOnce),
                                         groupProperties: sanitizeDicionary(groupProperties)),
+            context: buildContext(),
             fcm:[ "iosDeviceToken" :getFcmToken()]
         )
         
