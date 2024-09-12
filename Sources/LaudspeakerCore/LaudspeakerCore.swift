@@ -269,39 +269,6 @@ public class LaudspeakerCore {
                                  groupProperties: [String: Any]? = nil) -> [String: Any]
     {
         var props: [String: Any] = [:]
-
-        let staticCtx = context?.staticContext()
-        let dynamicCtx = context?.dynamicContext()
-        //let staticCtx = staticContext()
-        //let localDynamicCtx = dynamicContext()
-        
-        /*
-        if staticCtx != nil {
-            props = props.merging(staticCtx ?? [:]) { current, _ in current }
-        }
-        if dynamicCtx != nil {
-            props = props.merging(dynamicCtx ?? [:]) { current, _ in current }
-        }
-        */
-        if let staticCtx = staticCtx {
-            if let jsonData = try? JSONSerialization.data(withJSONObject: staticCtx, options: .prettyPrinted),
-                       let jsonString = String(data: jsonData, encoding: .utf8) {
-                        print("staticCtx: \(jsonString)")
-                    } else {
-                        print("Failed to serialize staticCtx")
-                    }
-                props = props.merging(staticCtx) { current, _ in current }
-        }
-            
-        if let dynamicCtx = dynamicCtx {
-            if let jsonData = try? JSONSerialization.data(withJSONObject: dynamicCtx, options: .prettyPrinted),
-                       let jsonString = String(data: jsonData, encoding: .utf8) {
-                        print("dynamicCtx: \(jsonString)")
-                    } else {
-                        print("Failed to serialize dynamicCtx")
-                    }
-                props = props.merging(dynamicCtx) { current, _ in current }
-        }
         
         if userProperties != nil {
             props["$set"] = (userProperties ?? [:])
