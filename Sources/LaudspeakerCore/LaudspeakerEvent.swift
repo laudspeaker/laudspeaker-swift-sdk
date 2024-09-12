@@ -32,7 +32,7 @@ public class LaudspeakerEvent {
         self.event = event
         self.distinctId = distinctId
         self.properties = properties ?? [:]
-        self.context = properties ?? [:]
+        self.context = context ?? [:]
         self.timestamp = timestamp
         self.uuid = uuid
         self.fcm = fcm
