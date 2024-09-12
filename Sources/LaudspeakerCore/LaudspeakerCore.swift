@@ -296,7 +296,7 @@ public class LaudspeakerCore {
         return props
     }
     
-    private func buildContext(properties: [String: Any]? = nil) -> [String: Any]
+    private func buildContext() -> [String: Any]
     {
         var props: [String: Any] = [:]
 
@@ -323,9 +323,7 @@ public class LaudspeakerCore {
                 props = props.merging(dynamicCtx) { current, _ in current }
         }
         
-        
-        
-        props = props.merging(properties ?? [:]) { current, _ in current }
+        //props = props.merging(properties ?? [:]) { current, _ in current }
         
         print("Final properties:")
             for (key, value) in props {
