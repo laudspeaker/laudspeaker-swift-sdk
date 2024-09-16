@@ -195,6 +195,8 @@ public class LaudspeakerCore {
         if(sessionManager == nil){
             SentrySDK.capture(message: "sessionManger nil on setFcmToken")
         }
+        //self.newStorage?.setString(forKey: .fcmToken, contents: token ?? "fcm_set_token_error")
+            
         return sessionManager!.setFcmToken(token) //?? ""
     }
     
@@ -350,7 +352,7 @@ public class LaudspeakerCore {
     
     private func sendStartEvent() {
             let properties: [String: Any] = ["time": Date()]
-            self.fire(event: "$start", payload: properties)
+            self.fire(event: "$appOpen", payload: properties)
         }
 
     @objc public func flush() {
