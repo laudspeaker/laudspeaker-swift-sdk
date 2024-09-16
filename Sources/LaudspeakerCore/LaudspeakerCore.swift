@@ -334,6 +334,11 @@ public class LaudspeakerCore {
 
         return props
     }
+    
+    private func sendStartEvent() {
+            let properties: [String: Any] = ["time": Date()]
+            self.fire(event: "$start", payload: properties)
+        }
 
     @objc public func flush() {
         /*
@@ -433,6 +438,8 @@ public class LaudspeakerCore {
         
         //addHandlers()
         //loadMessageQueueFromDisk() // Load the message queue from disk
+        // After initializing the SDK, send the $start event
+        self.sendStartEvent()
     }
     
     @objc public func close() {
