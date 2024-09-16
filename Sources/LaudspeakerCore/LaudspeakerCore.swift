@@ -180,9 +180,22 @@ public class LaudspeakerCore {
         }
         */
         if(sessionManager == nil){
-            SentrySDK.capture(message: "sessionManger nil on getAnonymousId")
+            SentrySDK.capture(message: "sessionManger nil on getFcmToken")
         }
         return sessionManager!.getFcmToken() //?? ""
+    }
+    
+    @objc public func setFcmToken(token: String) {
+        /*
+        if !isEnabled() {
+            return ""
+        }
+        */
+        print("in set fcm via laudcore")
+        if(sessionManager == nil){
+            SentrySDK.capture(message: "sessionManger nil on setFcmToken")
+        }
+        return sessionManager!.setFcmToken(token) //?? ""
     }
     
     private func rotateSessionIdIfRequired() {
